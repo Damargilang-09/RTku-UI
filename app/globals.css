@@ -1,26 +1,43 @@
-@import "tailwindcss";
+/* app/globals.css */
 
+/* 1. Setup Layer untuk mencegah tabrakan sesuai konfigurasi sebelumnya */
+@layer tailwind-base, mantine, tailwind-utilities;
+
+@layer tailwind-base {
+  @import "tailwindcss";
+}
+
+/* 2. Daftarkan Design System dari Screenshot ke dalam CSS Variables */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colors dari Template */
+  --color-primary: #0052cc;
+  --color-secondary: #22c55e;
+  --color-tertiary: #64748b;
+  --color-neutral-bg: #f8fafc;
+  --color-inverted: #1e293b;
+  
+  /* Tambahan warna fungsional dari komponen di gambar */
+  --color-border: #e2e8f0;
+  --color-search-bg: #e2e8f0;
+  --color-danger: #dc2626; /* Tombol merah di kanan bawah */
+
+  /* Typography */
+  --font-sans: 'Inter', sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* 3. Base Styling Aplikasi */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background-color: #e2e8f0; /* Background abu-abu luar seperti di gambar */
+  color: var(--color-inverted);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* 4. Kustomisasi Dasar untuk Card Container (opsional, menyerupai visual gambar) */
+.ui-card {
+  background-color: var(--color-neutral-bg);
+  border-radius: 1.5rem; /* rounded-3xl dari visual rounded tebal di gambar */
+  padding: 1.5rem;
 }
