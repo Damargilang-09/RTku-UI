@@ -14,17 +14,24 @@ const NAV_ITEMS = [
     label: "Dashboard",
     roles: ["bendahara", "ketuaRT", "superAdmin"],
   },
-  {
-    href: "/konfirmasi-pembayaran",
-    icon: "fact_check",
-    label: "Konfirmasi Pembayaran",
-    roles: ["bendahara", "ketuaRT"],
-  },
+
   {
     href: "/jenis-iuran",
     icon: "price_change",
     label: "Jenis Iuran",
     roles: ["bendahara"],
+  },
+  {
+    href: "/tagihan-warga",
+    icon: "request_quote",
+    label: "Tagihan Warga",
+    roles: ["bendahara"],
+  },
+  {
+    href: "/konfirmasi-pembayaran",
+    icon: "fact_check",
+    label: "Konfirmasi Pembayaran",
+    roles: ["bendahara", "ketuaRT"],
   },
   {
     href: "/pengeluaran",
@@ -50,12 +57,6 @@ const NAV_ITEMS = [
     icon: "summarize",
     label: "Laporan Keuangan",
     roles: ["bendahara", "ketuaRT"],
-  },
-  {
-    href: "/tagihan-warga",
-    icon: "request_quote",
-    label: "Tagihan Warga",
-    roles: ["bendahara"],
   },
 ];
 
