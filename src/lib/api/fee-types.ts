@@ -5,7 +5,6 @@ export interface FeeTypePayload {
   name: string;
   description?: string;
   amount: number;
-  dueDay?: number;
   billingPeriod: BillingPeriod;
 }
 

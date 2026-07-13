@@ -3,7 +3,12 @@
 export type UserRole = "warga" | "bendahara" | "ketuaRT" | "superAdmin";
 export type UserStatus = "active" | "inactive";
 
-export type BillStatus = "unpaid" | "pending" | "paid" | "overdue" | "cancelled";
+export type BillStatus =
+  | "unpaid"
+  | "pending"
+  | "paid"
+  | "overdue"
+  | "cancelled";
 export type ApprovalStatus = "approved" | "rejected" | "pending";
 export type BillingPeriod = "monthly" | "once";
 
@@ -23,7 +28,6 @@ export interface FeeType {
   name: string;
   description: string | null;
   amount: number;
-  dueDay: number | null;
   billingPeriod: BillingPeriod;
 }
 
@@ -41,7 +45,12 @@ export interface Bill {
   paidAt: string | null;
   createdAt: string;
   feeType: { id: string; name: string; billingPeriod: BillingPeriod };
-  user?: { id: string; name: string; email: string; houseNumber: string | null };
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    houseNumber: string | null;
+  };
   payments?: Payment[];
 }
 

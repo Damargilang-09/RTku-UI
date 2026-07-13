@@ -143,9 +143,6 @@ export default function JenisIuranPage() {
                     <p className="mt-1 text-sm font-semibold text-primary">{formatRupiah(feeType.amount)}</p>
                     <p className="mt-1 text-xs text-text-secondary">
                       {feeType.description || "Tanpa deskripsi"}
-                      {feeType.billingPeriod === "monthly" && (
-                        <> &middot; Jatuh tempo tanggal {feeType.dueDay ?? "-"}</>
-                      )}
                     </p>
                   </div>
                 </div>

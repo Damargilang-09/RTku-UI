@@ -13,7 +13,6 @@ const EMPTY_FORM = {
   name: "",
   description: "",
   amount: "",
-  dueDay: "",
   billingPeriod: "monthly" as BillingPeriod,
 };
 
@@ -41,24 +40,11 @@ export default function TambahJenisIuranPage() {
       return;
     }
 
-    if (
-      form.billingPeriod === "monthly" &&
-      form.dueDay &&
-      (Number(form.dueDay) < 1 || Number(form.dueDay) > 31)
-    ) {
-      setError("Tanggal jatuh tempo harus berada di antara 1 sampai 31");
-      return;
-    }
-
     const payload: FeeTypePayload = {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       amount: Number(form.amount),
       billingPeriod: form.billingPeriod,
-      dueDay:
-        form.billingPeriod === "monthly" && form.dueDay
-          ? Number(form.dueDay)
-          : undefined,
     };
 
     setSubmitting(true);
@@ -67,7 +53,11 @@ export default function TambahJenisIuranPage() {
       router.push("/jenis-iuran");
       router.refresh();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal menambahkan jenis iuran");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Gagal menambahkan jenis iuran",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -84,9 +74,12 @@ export default function TambahJenisIuranPage() {
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Tambah Jenis Iuran</h1>
+          <h1 className="text-2xl font-bold text-text-primary">
+            Tambah Jenis Iuran
+          </h1>
           <p className="text-sm text-text-secondary">
-            Buat jenis iuran baru yang nantinya dapat digunakan saat membuat tagihan warga.
+            Buat jenis iuran baru yang nantinya dapat digunakan saat membuat
+            tagihan warga.
           </p>
         </div>
       </div>
@@ -128,44 +121,45 @@ export default function TambahJenisIuranPage() {
           onChange={(event) => updateForm("description", event.target.value)}
         />
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary">
-            Periode Penagihan
-            <select
-              value={form.billingPeriod}
-              onChange={(event) => updateForm("billingPeriod", event.target.value)}
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
-            >
-              <option value="monthly">Bulanan</option>
-              <option value="once">Sekali Bayar</option>
-            </select>
-          </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary">
+          Periode Penagihan
+          <select
+            value={form.billingPeriod}
+            onChange={(event) =>
+              updateForm("billingPeriod", event.target.value)
+            }
+            className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
+          >
+            <option value="monthly">Bulanan</option>
+            <option value="once">Sekali Bayar</option>
+          </select>
+        </label>
 
-          <Input
-            label="Tanggal Jatuh Tempo"
-            type="number"
-            min="1"
-            max="31"
-            placeholder="Contoh: 10"
-            value={form.dueDay}
-            onChange={(event) => updateForm("dueDay", event.target.value)}
-            disabled={form.billingPeriod === "once"}
-          />
+        <div className="flex items-start gap-3 rounded-xl bg-info-bg px-4 py-3 text-sm text-info">
+          <span className="material-symbols-outlined mt-0.5 text-base">
+            info
+          </span>
+          <p>
+            Tanggal jatuh tempo ditentukan saat Bendahara melakukan generate
+            tagihan warga.
+          </p>
         </div>
-
-        {form.billingPeriod === "once" && (
-          <div className="rounded-xl bg-info-bg px-4 py-3 text-sm text-info">
-            Jenis iuran sekali bayar tidak membutuhkan tanggal jatuh tempo bulanan.
-          </div>
-        )}
 
         <div className="flex flex-col-reverse gap-2 border-t border-border pt-5 sm:flex-row sm:justify-end">
           <Link href="/jenis-iuran" className="sm:w-auto">
-            <Button type="button" variant="secondary" className="w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full sm:w-auto"
+            >
               Batal
             </Button>
           </Link>
-          <Button type="submit" loading={submitting} className="w-full sm:w-auto">
+          <Button
+            type="submit"
+            loading={submitting}
+            className="w-full sm:w-auto"
+          >
             <span className="material-symbols-outlined text-base">save</span>
             Simpan Jenis Iuran
           </Button>

@@ -14,7 +14,6 @@ const EMPTY_FORM = {
   name: "",
   description: "",
   amount: "",
-  dueDay: "",
   billingPeriod: "monthly" as BillingPeriod,
 };
 
@@ -36,11 +35,14 @@ export default function EditJenisIuranPage() {
         name: feeType.name,
         description: feeType.description ?? "",
         amount: String(feeType.amount),
-        dueDay: feeType.dueDay ? String(feeType.dueDay) : "",
         billingPeriod: feeType.billingPeriod,
       });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal mengambil detail jenis iuran");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Gagal mengambil detail jenis iuran",
+      );
     } finally {
       setLoading(false);
     }
@@ -58,10 +60,14 @@ export default function EditJenisIuranPage() {
     event.preventDefault();
     setError(null);
 
-    if (!form.name.trim()) return setError("Nama jenis iuran wajib diisi");
-    if (!form.amount || Number(form.amount) <= 0) return setError("Nominal harus lebih dari 0");
-    if (form.billingPeriod === "monthly" && form.dueDay && (Number(form.dueDay) < 1 || Number(form.dueDay) > 31)) {
-      return setError("Tanggal jatuh tempo harus berada di antara 1 sampai 31");
+    if (!form.name.trim()) {
+      setError("Nama jenis iuran wajib diisi");
+      return;
+    }
+
+    if (!form.amount || Number(form.amount) <= 0) {
+      setError("Nominal harus lebih dari 0");
+      return;
     }
 
     const payload: Partial<FeeTypePayload> = {
@@ -69,15 +75,19 @@ export default function EditJenisIuranPage() {
       description: form.description.trim() || undefined,
       amount: Number(form.amount),
       billingPeriod: form.billingPeriod,
-      dueDay: form.billingPeriod === "monthly" && form.dueDay ? Number(form.dueDay) : undefined,
     };
 
     setSubmitting(true);
     try {
       await feeTypesApi.update(params.id, payload);
       router.push(`/jenis-iuran/${params.id}`);
+      router.refresh();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal memperbarui jenis iuran");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Gagal memperbarui jenis iuran",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -86,54 +96,88 @@ export default function EditJenisIuranPage() {
   if (loading) return <Spinner />;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       <div className="flex items-start gap-3">
-        <Link href={`/jenis-iuran/${params.id}`} className="rounded-lg p-2 text-text-secondary hover:bg-surface-tertiary" aria-label="Kembali">
+        <Link
+          href={`/jenis-iuran/${params.id}`}
+          className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary transition-colors hover:bg-surface-tertiary"
+          aria-label="Kembali"
+        >
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Edit Jenis Iuran</h1>
-          <p className="text-sm text-text-secondary">Perbarui informasi jenis iuran.</p>
+          <h1 className="text-2xl font-bold text-text-primary">
+            Edit Jenis Iuran
+          </h1>
+          <p className="text-sm text-text-secondary">
+            Perbarui informasi jenis iuran yang dipilih.
+          </p>
         </div>
       </div>
 
-      {error && <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">{error}</div>}
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-5 rounded-card border border-border bg-surface p-5 sm:p-6"
+      >
+        {error && (
+          <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">
+            {error}
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5">
         <div className="grid gap-4 md:grid-cols-2">
-          <Input label="Nama Jenis Iuran" value={form.name} onChange={(event) => updateForm("name", event.target.value)} required />
-          <Input label="Nominal" type="number" min="1" value={form.amount} onChange={(event) => updateForm("amount", event.target.value)} required />
-        </div>
-
-        <Textarea label="Deskripsi" rows={4} value={form.description} onChange={(event) => updateForm("description", event.target.value)} />
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary">
-            Periode Penagihan
-            <select
-              value={form.billingPeriod}
-              onChange={(event) => updateForm("billingPeriod", event.target.value)}
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
-            >
-              <option value="monthly">Bulanan</option>
-              <option value="once">Sekali Bayar</option>
-            </select>
-          </label>
-
           <Input
-            label="Tanggal Jatuh Tempo"
+            label="Nama Jenis Iuran"
+            value={form.name}
+            onChange={(event) => updateForm("name", event.target.value)}
+            required
+          />
+          <Input
+            label="Nominal"
             type="number"
             min="1"
-            max="31"
-            value={form.dueDay}
-            onChange={(event) => updateForm("dueDay", event.target.value)}
-            disabled={form.billingPeriod === "once"}
+            value={form.amount}
+            onChange={(event) => updateForm("amount", event.target.value)}
+            required
           />
         </div>
 
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Textarea
+          label="Deskripsi"
+          rows={4}
+          value={form.description}
+          onChange={(event) => updateForm("description", event.target.value)}
+        />
+
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary">
+          Periode Penagihan
+          <select
+            value={form.billingPeriod}
+            onChange={(event) =>
+              updateForm("billingPeriod", event.target.value)
+            }
+            className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
+          >
+            <option value="monthly">Bulanan</option>
+            <option value="once">Sekali Bayar</option>
+          </select>
+        </label>
+
+        <div className="flex items-start gap-3 rounded-xl bg-info-bg px-4 py-3 text-sm text-info">
+          <span className="material-symbols-outlined mt-0.5 text-base">
+            info
+          </span>
+          <p>
+            Tanggal jatuh tempo tidak disimpan pada jenis iuran. Tanggalnya
+            ditentukan saat generate tagihan warga.
+          </p>
+        </div>
+
+        <div className="flex flex-col-reverse gap-2 border-t border-border pt-5 sm:flex-row sm:justify-end">
           <Link href={`/jenis-iuran/${params.id}`}>
-            <Button type="button" variant="secondary">Batal</Button>
+            <Button type="button" variant="secondary">
+              Batal
+            </Button>
           </Link>
           <Button type="submit" loading={submitting}>
             <span className="material-symbols-outlined text-base">save</span>
