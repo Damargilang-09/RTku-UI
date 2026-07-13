@@ -8,12 +8,43 @@ import { authApi } from "@/src/lib/api/auth";
 import { ROLE_LABEL } from "@/src/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", icon: "dashboard", label: "Dashboard", roles: ["bendahara", "ketuaRT", "superAdmin"] },
-  { href: "/konfirmasi-pembayaran", icon: "fact_check", label: "Konfirmasi Pembayaran", roles: ["bendahara", "ketuaRT"] },
-  { href: "/pengeluaran", icon: "receipt_long", label: "Pengeluaran", roles: ["bendahara", "ketuaRT"] },
-  { href: "/pemasukan", icon: "trending_up", label: "Pemasukan Lain", roles: ["bendahara", "ketuaRT"] },
-  { href: "/warga", icon: "group", label: "Kelola Warga", roles: ["ketuaRT", "superAdmin"] },
-  { href: "/laporan", icon: "summarize", label: "Laporan Keuangan", roles: ["bendahara", "ketuaRT"] },
+  {
+    href: "/dashboard",
+    icon: "dashboard",
+    label: "Dashboard",
+    roles: ["bendahara", "ketuaRT", "superAdmin"],
+  },
+  {
+    href: "/konfirmasi-pembayaran",
+    icon: "fact_check",
+    label: "Konfirmasi Pembayaran",
+    roles: ["bendahara", "ketuaRT"],
+  },
+  {
+    href: "/pengeluaran",
+    icon: "receipt_long",
+    label: "Pengeluaran",
+    roles: ["bendahara", "ketuaRT"],
+  },
+  {
+    href: "/pemasukan",
+    icon: "trending_up",
+    label: "Pemasukan Lain",
+    roles: ["bendahara", "ketuaRT"],
+  },
+  { href: "/warga", icon: "group", label: "Kelola Warga", roles: ["ketuaRT"] },
+  {
+    href: "/kelola-ketua-rt",
+    icon: "manage_accounts",
+    label: "Kelola Ketua RT",
+    roles: ["superAdmin"],
+  },
+  {
+    href: "/laporan",
+    icon: "summarize",
+    label: "Laporan Keuangan",
+    roles: ["bendahara", "ketuaRT"],
+  },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -21,7 +52,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, setUser } = useAuthStore();
 
-  const items = NAV_ITEMS.filter((item) => !user || item.roles.includes(user.role));
+  const items = NAV_ITEMS.filter(
+    (item) => !user || item.roles.includes(user.role),
+  );
 
   async function handleLogout() {
     try {
@@ -56,7 +89,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                     : "text-text-secondary hover:bg-surface-tertiary hover:text-text-primary",
                 )}
               >
-                <span className="material-symbols-outlined text-xl">{item.icon}</span>
+                <span className="material-symbols-outlined text-xl">
+                  {item.icon}
+                </span>
                 {item.label}
               </Link>
             );
@@ -69,8 +104,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               {user?.name?.charAt(0).toUpperCase() ?? "?"}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-text-primary">{user?.name}</p>
-              <p className="truncate text-xs text-text-secondary">{user ? ROLE_LABEL[user.role] : ""}</p>
+              <p className="truncate text-sm font-semibold text-text-primary">
+                {user?.name}
+              </p>
+              <p className="truncate text-xs text-text-secondary">
+                {user ? ROLE_LABEL[user.role] : ""}
+              </p>
             </div>
           </div>
           <button
@@ -91,7 +130,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <span className="material-symbols-outlined">logout</span>
           </button>
         </header>
-        <main className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8">{children}</main>
+        <main className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8">
+          {children}
+        </main>
       </div>
     </div>
   );
