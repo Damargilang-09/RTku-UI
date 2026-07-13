@@ -51,6 +51,12 @@ const NAV_ITEMS = [
     label: "Laporan Keuangan",
     roles: ["bendahara", "ketuaRT"],
   },
+  {
+    href: "/tagihan-warga",
+    icon: "request_quote",
+    label: "Tagihan Warga",
+    roles: ["bendahara"],
+  },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

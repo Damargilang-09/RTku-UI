@@ -1,0 +1,20 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { billsApi, type CancelBatchResult } from "@/src/lib/api/bills";
+import { ApiError } from "@/src/lib/api/axios";
+import { Button } from "@/src/components/ui/Button";
+import { Input } from "@/src/components/ui/Input";
+
+export default function CancelBatchTagihanPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [batchId, setBatchId] = useState(searchParams.get("batchId") ?? "");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<CancelBatchResult | null>(null);
+  async function handleCancel() { if (!batchId.trim()) return setError("Batch ID wajib diisi"); setSubmitting(true); setError(null); try { const response = await billsApi.cancelBillBatch(batchId.trim()); setResult(response.data); } catch (err) { setError(err instanceof ApiError ? err.message : "Gagal membatalkan batch tagihan"); } finally { setSubmitting(false); } }
+  return <div className="mx-auto flex w-full max-w-2xl flex-col gap-5"><div className="flex items-start gap-3"><Link href="/tagihan-warga" className="rounded-lg p-2 text-text-secondary hover:bg-surface-tertiary"><span className="material-symbols-outlined">arrow_back</span></Link><div><h1 className="text-2xl font-bold text-text-primary">Batalkan Batch Tagihan</h1><p className="text-sm text-text-secondary">Membatalkan seluruh tagihan unpaid atau overdue pada batch yang dipilih.</p></div></div>{error && <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">{error}</div>}{result ? <div className="rounded-card border border-border bg-surface p-5"><div className="flex items-start gap-3"><span className="material-symbols-outlined rounded-xl bg-success-bg p-3 text-success">check_circle</span><div><h2 className="font-semibold text-text-primary">Batch berhasil diproses</h2><p className="mt-1 break-all text-xs text-text-secondary">{result.batchId}</p></div></div><dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4"><div className="rounded-xl bg-surface-tertiary p-3"><dt className="text-xs text-text-muted">Total</dt><dd className="text-xl font-bold">{result.totalBillInBatch}</dd></div><div className="rounded-xl bg-success-bg p-3"><dt className="text-xs text-success">Dibatalkan</dt><dd className="text-xl font-bold text-success">{result.cancelledCount}</dd></div><div className="rounded-xl bg-warning-bg p-3"><dt className="text-xs text-warning">Paid/Pending</dt><dd className="text-xl font-bold text-warning">{result.paidSkippedCount + result.pendingSkippedCount}</dd></div><div className="rounded-xl bg-surface-tertiary p-3"><dt className="text-xs text-text-muted">Sudah Batal</dt><dd className="text-xl font-bold">{result.alreadyCancelledCount}</dd></div></dl><div className="mt-5 flex justify-end"><Button onClick={() => router.push("/tagihan-warga")}>Kembali ke Daftar</Button></div></div> : <div className="rounded-card border border-danger/20 bg-surface p-5"><div className="flex items-start gap-4"><div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-danger-bg text-danger"><span className="material-symbols-outlined">warning</span></div><div><h2 className="font-semibold text-text-primary">Konfirmasi pembatalan batch</h2><p className="mt-2 text-sm leading-6 text-text-secondary">Hanya tagihan berstatus belum dibayar atau terlambat yang akan dibatalkan. Tagihan paid, pending, dan yang sudah cancelled akan dilewati.</p></div></div><div className="mt-5"><Input label="Batch ID" value={batchId} onChange={(e) => setBatchId(e.target.value)} placeholder="Masukkan batch ID" /></div><div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Link href="/tagihan-warga"><Button type="button" variant="secondary">Batal</Button></Link><Button variant="danger" loading={submitting} onClick={handleCancel}><span className="material-symbols-outlined text-base">cancel</span>Ya, Batalkan Batch</Button></div></div>}</div>;
+}
