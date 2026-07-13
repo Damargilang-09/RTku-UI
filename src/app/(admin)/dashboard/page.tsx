@@ -24,7 +24,7 @@ export default function AdminDashboardPage() {
     ])
       .then(([summaryRes, paymentsRes]) => {
         setSummary(summaryRes.data);
-        if (paymentsRes) setPending(paymentsRes.data.formattedPayments);
+        if (paymentsRes) setPending(paymentsRes.data);
       })
       .finally(() => setLoading(false));
   }, []);

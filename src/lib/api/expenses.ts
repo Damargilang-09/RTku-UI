@@ -3,7 +3,7 @@ import type { ApiResponse, Expense, PaginationMeta } from "@/src/types";
 
 export const expensesApi = {
   async getAll(params: Record<string, string | number | undefined> = {}) {
-    const res = await api.get<ApiResponse<{ formattedExpenses: Expense[]; meta: PaginationMeta }>>(
+    const res = await api.get<ApiResponse<Expense[]>>(
       "/expenses",
       { params },
     );

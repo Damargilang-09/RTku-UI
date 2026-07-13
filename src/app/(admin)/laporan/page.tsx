@@ -26,8 +26,8 @@ export default function LaporanKeuanganPage() {
   const load = useCallback(() => {
     setLoading(true);
     reportsApi
-      .getAll({ limit: 24 })
-      .then((res) => setReports(res.data.reports))
+      .getAll({ limit: 10 })
+      .then((res) => setReports(res.data))
       .finally(() => setLoading(false));
   }, []);
 

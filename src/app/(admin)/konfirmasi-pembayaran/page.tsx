@@ -30,8 +30,8 @@ export default function KonfirmasiPembayaranPage() {
   const load = useCallback(() => {
     setLoading(true);
     paymentsApi
-      .getAll({ status: tab, limit: 50 })
-      .then((res) => setPayments(res.data.formattedPayments))
+      .getAll({ status: tab, limit: 10 })
+      .then((res) => setPayments(res.data))
       .finally(() => setLoading(false));
   }, [tab]);
 

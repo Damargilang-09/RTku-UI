@@ -14,7 +14,7 @@ export const billsApi = {
 
   // bendahara
   async getAllBills(params: Record<string, string | number | undefined> = {}) {
-    const res = await api.get<ApiResponse<{ data: Bill[]; meta: PaginationMeta }>>("/bills", { params });
+    const res = await api.get<ApiResponse<Bill[]>>("/bills", { params });
     return res.data;
   },
 

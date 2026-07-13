@@ -8,7 +8,7 @@ export const reportsApi = {
   },
 
   async getAll(params: Record<string, string | number | undefined> = {}) {
-    const res = await api.get<ApiResponse<{ reports: Report[]; meta: PaginationMeta }>>("/report", { params });
+    const res = await api.get<ApiResponse<Report[]>>("/report", { params });
     return res.data;
   },
 

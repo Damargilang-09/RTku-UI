@@ -3,11 +3,12 @@ import type { ApiResponse, Income, PaginationMeta } from "@/src/types";
 
 export const incomeApi = {
   async getAll(params: Record<string, string | number | undefined> = {}) {
-    const res = await api.get<ApiResponse<{ formattedIncome: Income[]; meta: PaginationMeta }>>(
+    const res = await api.get<ApiResponse<Income[]>>(
       "/income",
       { params },
     );
-    return res.data;
+    console.log(res.data)
+    return res.data.data;
   },
 
   async getDetail(id: string) {

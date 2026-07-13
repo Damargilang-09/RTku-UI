@@ -47,8 +47,9 @@ export default function PemasukanPage() {
   const load = useCallback(() => {
     setLoading(true);
     incomeApi
-      .getAll({ status: tab, limit: 50 })
-      .then((res) => setIncome(res.data.formattedIncome))
+      .getAll({ status: tab, limit: 10 })
+      .then((res) => setIncome(res)) 
+      
       .finally(() => setLoading(false));
   }, [tab]);
 
@@ -111,6 +112,7 @@ export default function PemasukanPage() {
       setBusyId(null);
     }
   }
+
 
   const canApprove = user?.role === "ketuaRT";
   const canCreate = user?.role === "bendahara";

@@ -3,7 +3,7 @@ import type { ApiResponse, User, PaginationMeta } from "@/src/types";
 
 export const usersApi = {
   async getAll(params: Record<string, string | number | undefined> = {}) {
-    const res = await api.get<ApiResponse<{ data: User[]; meta: PaginationMeta }>>("/users", { params });
+    const res = await api.get<ApiResponse<User[]>>("/users", { params });
     return res.data;
   },
 

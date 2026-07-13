@@ -22,7 +22,7 @@ export const paymentsApi = {
 
   // bendahara
   async getAll(params: Record<string, string | number | undefined> = {}) {
-    const res = await api.get<ApiResponse<{ formattedPayments: Payment[]; meta: PaginationMeta }>>(
+    const res = await api.get<ApiResponse<Payment[]>>(
       "/payment",
       { params },
     );
