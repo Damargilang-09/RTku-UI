@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { feeTypesApi, type FeeTypePayload } from "@/src/lib/api/fee-types";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { feeTypesApi } from "@/src/lib/api/fee-types";
 import { ApiError } from "@/src/lib/api/axios";
 import { Button } from "@/src/components/ui/Button";
-import { Input, Textarea } from "@/src/components/ui/Input";
+import { Input } from "@/src/components/ui/Input";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
 import { formatRupiah } from "@/src/lib/utils";
@@ -12,13 +13,6 @@ import type { BillingPeriod, FeeType } from "@/src/types";
 
 const PAGE_SIZE = 6;
 
-const EMPTY_FORM = {
-  name: "",
-  description: "",
-  amount: "",
-  dueDay: "",
-  billingPeriod: "monthly" as BillingPeriod,
-};
 
 function getVisiblePages(currentPage: number, totalPage: number) {
   if (totalPage <= 5) {
@@ -35,13 +29,7 @@ export default function JenisIuranPage() {
   const [periodFilter, setPeriodFilter] = useState<"all" | BillingPeriod>("all");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<FeeType | null>(null);
-  const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,106 +74,7 @@ export default function JenisIuranPage() {
     if (page > totalPage) setPage(totalPage);
   }, [page, totalPage]);
 
-  function updateForm(key: keyof typeof form, value: string) {
-    setForm((current) => ({ ...current, [key]: value }));
-  }
 
-  function openCreateForm() {
-    setEditing(null);
-    setForm(EMPTY_FORM);
-    setError(null);
-    setSuccess(null);
-    setShowForm(true);
-  }
-
-  function openEditForm(feeType: FeeType) {
-    setEditing(feeType);
-    setForm({
-      name: feeType.name,
-      description: feeType.description ?? "",
-      amount: String(feeType.amount),
-      dueDay: feeType.dueDay ? String(feeType.dueDay) : "",
-      billingPeriod: feeType.billingPeriod,
-    });
-    setError(null);
-    setSuccess(null);
-    setShowForm(true);
-  }
-
-  function closeForm() {
-    setShowForm(false);
-    setEditing(null);
-    setForm(EMPTY_FORM);
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    if (!form.name.trim()) {
-      setError("Nama jenis iuran wajib diisi");
-      return;
-    }
-
-    if (!form.amount || Number(form.amount) <= 0) {
-      setError("Nominal harus lebih dari 0");
-      return;
-    }
-
-    if (form.billingPeriod === "monthly" && form.dueDay && (Number(form.dueDay) < 1 || Number(form.dueDay) > 31)) {
-      setError("Tanggal jatuh tempo harus berada di antara 1 sampai 31");
-      return;
-    }
-
-    const payload: FeeTypePayload = {
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
-      amount: Number(form.amount),
-      billingPeriod: form.billingPeriod,
-      dueDay:
-        form.billingPeriod === "monthly" && form.dueDay
-          ? Number(form.dueDay)
-          : undefined,
-    };
-
-    setSubmitting(true);
-    try {
-      if (editing) {
-        await feeTypesApi.update(editing.id, payload);
-        setSuccess("Jenis iuran berhasil diperbarui");
-      } else {
-        await feeTypesApi.create(payload);
-        setSuccess("Jenis iuran berhasil ditambahkan");
-      }
-      closeForm();
-      await load();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal menyimpan jenis iuran");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleDelete(feeType: FeeType) {
-    const confirmed = window.confirm(
-      `Hapus jenis iuran “${feeType.name}”? Data akan dinonaktifkan dan tidak lagi muncul dalam daftar.`,
-    );
-    if (!confirmed) return;
-
-    setBusyId(feeType.id);
-    setError(null);
-    setSuccess(null);
-    try {
-      await feeTypesApi.delete(feeType.id);
-      setSuccess("Jenis iuran berhasil dihapus");
-      await load();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal menghapus jenis iuran");
-    } finally {
-      setBusyId(null);
-    }
-  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -196,94 +85,13 @@ export default function JenisIuranPage() {
             Tambah dan kelola jenis iuran yang digunakan untuk membuat tagihan warga.
           </p>
         </div>
-        <Button onClick={openCreateForm}>
-          <span className="material-symbols-outlined text-base">add</span>
-          Tambah Jenis Iuran
-        </Button>
+        <Link href="/jenis-iuran/tambah">
+          <Button>
+            <span className="material-symbols-outlined text-base">add</span>
+            Tambah Jenis Iuran
+          </Button>
+        </Link>
       </div>
-
-      {showForm && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="font-semibold text-text-primary">
-                {editing ? "Edit Jenis Iuran" : "Tambah Jenis Iuran"}
-              </h2>
-              <p className="text-xs text-text-secondary">Lengkapi informasi jenis iuran di bawah ini.</p>
-            </div>
-            <button
-              type="button"
-              onClick={closeForm}
-              className="rounded-lg p-2 text-text-secondary transition-colors hover:bg-surface-tertiary"
-              aria-label="Tutup formulir"
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input
-              label="Nama Jenis Iuran"
-              placeholder="Contoh: Iuran Kebersihan"
-              value={form.name}
-              onChange={(event) => updateForm("name", event.target.value)}
-              required
-            />
-            <Input
-              label="Nominal"
-              type="number"
-              min="1"
-              placeholder="Contoh: 50000"
-              value={form.amount}
-              onChange={(event) => updateForm("amount", event.target.value)}
-              required
-            />
-          </div>
-
-          <Textarea
-            label="Deskripsi"
-            placeholder="Jelaskan kegunaan iuran ini (opsional)"
-            rows={3}
-            value={form.description}
-            onChange={(event) => updateForm("description", event.target.value)}
-          />
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary">
-              Periode Penagihan
-              <select
-                value={form.billingPeriod}
-                onChange={(event) => updateForm("billingPeriod", event.target.value)}
-                className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
-              >
-                <option value="monthly">Bulanan</option>
-                <option value="once">Sekali Bayar</option>
-              </select>
-            </label>
-
-            <Input
-              label="Tanggal Jatuh Tempo"
-              type="number"
-              min="1"
-              max="31"
-              placeholder="Contoh: 10"
-              value={form.dueDay}
-              onChange={(event) => updateForm("dueDay", event.target.value)}
-              disabled={form.billingPeriod === "once"}
-            />
-          </div>
-
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button type="button" variant="secondary" onClick={closeForm}>
-              Batal
-            </Button>
-            <Button type="submit" loading={submitting}>
-              <span className="material-symbols-outlined text-base">save</span>
-              {editing ? "Simpan Perubahan" : "Simpan Jenis Iuran"}
-            </Button>
-          </div>
-        </form>
-      )}
 
       <div className="grid gap-3 md:grid-cols-[1fr_220px]">
         <Input
@@ -306,7 +114,6 @@ export default function JenisIuranPage() {
       </div>
 
       {error && <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">{error}</div>}
-      {success && <div className="rounded-xl bg-success-bg px-4 py-3 text-sm text-success">{success}</div>}
 
       {loading ? (
         <Spinner />
@@ -344,23 +151,24 @@ export default function JenisIuranPage() {
                 </div>
 
                 <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
-                  <Button
-                    variant="secondary"
-                    className="px-3 py-2 text-xs"
-                    onClick={() => openEditForm(feeType)}
-                  >
-                    <span className="material-symbols-outlined text-base">edit</span>
-                    Edit
-                  </Button>
-                  <Button
-                    variant="danger"
-                    className="px-3 py-2 text-xs"
-                    loading={busyId === feeType.id}
-                    onClick={() => handleDelete(feeType)}
-                  >
-                    <span className="material-symbols-outlined text-base">delete</span>
-                    Hapus
-                  </Button>
+                  <Link href={`/jenis-iuran/${feeType.id}`}>
+                    <Button variant="secondary" className="px-3 py-2 text-xs">
+                      <span className="material-symbols-outlined text-base">visibility</span>
+                      Detail
+                    </Button>
+                  </Link>
+                  <Link href={`/jenis-iuran/${feeType.id}/edit`}>
+                    <Button variant="secondary" className="px-3 py-2 text-xs">
+                      <span className="material-symbols-outlined text-base">edit</span>
+                      Edit
+                    </Button>
+                  </Link>
+                  <Link href={`/jenis-iuran/${feeType.id}/hapus`}>
+                    <Button variant="danger" className="px-3 py-2 text-xs">
+                      <span className="material-symbols-outlined text-base">delete</span>
+                      Hapus
+                    </Button>
+                  </Link>
                 </div>
               </div>
             ))}
