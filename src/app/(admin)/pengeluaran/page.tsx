@@ -33,8 +33,8 @@ export default function PengeluaranPage() {
   const load = useCallback(() => {
     setLoading(true);
     expensesApi
-      .getAll({ status: tab, limit: 50 })
-      .then((res) => setExpenses(res.data.formattedExpenses))
+      .getAll({ status: tab, limit: 10 })
+      .then((res) => setExpenses(res.data))
       .finally(() => setLoading(false));
   }, [tab]);
 

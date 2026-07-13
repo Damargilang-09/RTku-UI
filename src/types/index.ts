@@ -128,3 +128,8 @@ export interface ApiErrorShape {
   success: false;
   message: string;
 }
+
+export interface UserListResponse {
+  users: User[];
+  meta: PaginationMeta;
+}

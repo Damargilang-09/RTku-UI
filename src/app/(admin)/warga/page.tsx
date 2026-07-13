@@ -22,7 +22,7 @@ export default function KelolaWargaPage() {
     setLoading(true);
     usersApi
       .getAll({ limit: 10, search: search || undefined })
-      .then((res) => setUsers(res.data.data))
+      .then((res) => setUsers(res.data.users))
       .finally(() => setLoading(false));
   }, [search]);
 
@@ -35,7 +35,7 @@ export default function KelolaWargaPage() {
     setBusyId(user.id);
     setError(null);
     try {
-      await usersApi.update(user.id, { status: user.status === "active" ? "inactive" : "active" });
+      await usersApi.update(user?.id, { status: user.status === "active" ? "inactive" : "active" });
       load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Gagal memperbarui status warga");
@@ -45,7 +45,7 @@ export default function KelolaWargaPage() {
   }
 
   async function toggleRole(user: User) {
-    setBusyId(user.id);
+    setBusyId(user?.id);
     setError(null);
     try {
       await usersApi.update(user.id, { role: user.role === "bendahara" ? "warga" : "bendahara" });
@@ -56,7 +56,6 @@ export default function KelolaWargaPage() {
       setBusyId(null);
     }
   }
-
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -79,7 +78,7 @@ export default function KelolaWargaPage() {
         <EmptyState icon="group" title="Tidak ada warga ditemukan" />
       ) : (
         <div className="overflow-hidden rounded-card border border-border bg-surface">
-          {users?.map((user, idx) => (
+          {users.map((user, idx) => (
             <div
               key={user.id}
               className={`flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between ${idx !== users.length - 1 ? "border-b border-surface-tertiary" : ""}`}

@@ -7,7 +7,7 @@ export const incomeApi = {
       "/income",
       { params },
     );
-    console.log(res.data)
+    
     return res.data.data;
   },
 

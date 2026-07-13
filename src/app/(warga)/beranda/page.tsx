@@ -19,7 +19,7 @@ export default function BerandaPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([billsApi.getMyBills({ limit: 50 }), paymentsApi.getMyPayments({ limit: 5 })])
+    Promise.all([billsApi.getMyBills({ limit: 10 }), paymentsApi.getMyPayments({ limit: 5 })])
       .then(([billsRes, paymentsRes]) => {
         setBills(billsRes.data);
         setRecent(paymentsRes.data.formattedPayments);
