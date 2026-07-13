@@ -21,6 +21,12 @@ const NAV_ITEMS = [
     roles: ["bendahara", "ketuaRT"],
   },
   {
+    href: "/jenis-iuran",
+    icon: "price_change",
+    label: "Jenis Iuran",
+    roles: ["bendahara"],
+  },
+  {
     href: "/pengeluaran",
     icon: "receipt_long",
     label: "Pengeluaran",

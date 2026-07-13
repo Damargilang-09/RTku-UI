@@ -1,5 +1,13 @@
 import { api } from "./axios";
-import type { ApiResponse, FeeType } from "@/src/types";
+import type { ApiResponse, BillingPeriod, FeeType } from "@/src/types";
+
+export interface FeeTypePayload {
+  name: string;
+  description?: string;
+  amount: number;
+  dueDay?: number;
+  billingPeriod: BillingPeriod;
+}
 
 export const feeTypesApi = {
   async getAll() {
@@ -12,14 +20,21 @@ export const feeTypesApi = {
     return res.data;
   },
 
-  async create(payload: {
-    name: string;
-    description?: string;
-    amount: number;
-    dueDay?: number;
-    billingPeriod: string;
-  }) {
+  async create(payload: FeeTypePayload) {
     const res = await api.post<ApiResponse<FeeType>>("/fee-types", payload);
+    return res.data;
+  },
+
+  async update(id: string, payload: Partial<FeeTypePayload>) {
+    const res = await api.patch<ApiResponse<FeeType>>(
+      `/fee-types/${id}`,
+      payload,
+    );
+    return res.data;
+  },
+
+  async delete(id: string) {
+    const res = await api.delete<ApiResponse<FeeType>>(`/fee-types/${id}`);
     return res.data;
   },
 };
