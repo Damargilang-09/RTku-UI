@@ -12,7 +12,17 @@ export default function RootPage() {
     authApi
       .me()
       .then((res) => {
-        router.replace(res.data.role === "warga" ? "/beranda" : "/dashboard");
+        if (res.data.role === "warga") {
+          router.replace("/beranda");
+          return;
+        }
+
+        if (res.data.role === "superAdmin") {
+          router.replace("/kelola-ketua-rt");
+          return;
+        }
+
+        router.replace("/dashboard");
       })
       .catch(() => {
         router.replace("/login");

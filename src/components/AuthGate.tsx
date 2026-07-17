@@ -26,7 +26,17 @@ export function AuthGate({
         if (!active) return;
         setUser(res.data);
         if (!allowedRoles.includes(res.data.role)) {
-          router.replace(res.data.role === "warga" ? "/beranda" : "/dashboard");
+          if (res.data.role === "warga") {
+            router.replace("/beranda");
+            return;
+          }
+
+          if (res.data.role === "superAdmin") {
+            router.replace("/kelola-ketua-rt");
+            return;
+          }
+
+          router.replace("/dashboard");
           return;
         }
       } catch {

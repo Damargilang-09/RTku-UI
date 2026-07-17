@@ -12,7 +12,7 @@ const NAV_ITEMS = [
     href: "/dashboard",
     icon: "dashboard",
     label: "Dashboard",
-    roles: ["bendahara", "ketuaRT", "superAdmin"],
+    roles: ["bendahara", "ketuaRT"],
   },
 
   {

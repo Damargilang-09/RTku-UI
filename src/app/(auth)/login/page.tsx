@@ -24,9 +24,24 @@ export default function LoginPage() {
     try {
       const res = await authApi.login({ email, password });
       setUser(res.data);
-      router.push(res.data.role === "warga" ? "/beranda" : "/dashboard");
+
+      if (res.data.role === "warga") {
+        router.replace("/beranda");
+        return;
+      }
+
+      if (res.data.role === "superAdmin") {
+        router.replace("/kelola-ketua-rt");
+        return;
+      }
+
+      router.replace("/dashboard");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal masuk, silakan coba lagi");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Gagal masuk, silakan coba lagi",
+      );
     } finally {
       setLoading(false);
     }
@@ -39,15 +54,22 @@ export default function LoginPage() {
           <div className="flex h-30 w-30 items-center justify-center rounded-full bg-primary text-white">
             <img className="w-fit" src="/images/screen.png" alt="Logo RTku" />
           </div>
-          <h1 className="text-2xl font-bold text-text-primary">Masuk ke RTku</h1>
+          <h1 className="text-2xl font-bold text-text-primary">
+            Masuk ke RTku
+          </h1>
           <p className="text-sm text-text-secondary">
             Kelola iuran dan keuangan RT dengan mudah dan transparan.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-card-lg border border-border bg-surface p-6 shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4 rounded-card-lg border border-border bg-surface p-6 shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.05)]"
+        >
           {error && (
-            <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">{error}</div>
+            <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">
+              {error}
+            </div>
           )}
 
           <Input
