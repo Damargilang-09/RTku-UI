@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="bg-primary text-text-primary">
+        <Card className=" text-text-primary">
           <div className="flex items-center justify-between">
             <span className="text-sm text-text-secondary">Saldo Kas RT</span>
             <span className="material-symbols-outlined">account_balance_wallet</span>

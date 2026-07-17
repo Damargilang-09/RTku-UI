@@ -8,12 +8,12 @@ export const paymentsApi = {
   },
 
   async getMyPayments(params?: { page?: number; limit?: number }) {
-    const res = await api.get<ApiResponse<{ formattedPayments: Payment[]; meta: PaginationMeta }>>(
-      "/payment/transaction",
-      { params },
-    );
-    return res.data;
-  },
+  const res = await api.get<ApiResponse<Payment[]> & { meta: PaginationMeta }>(
+    "/payment/transaction",
+    { params },
+  );
+  return res.data;
+},
 
   async getDetail(id: string) {
     const res = await api.get<ApiResponse<Payment>>(`/payment/detail/${id}`);

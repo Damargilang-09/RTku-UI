@@ -2,13 +2,13 @@ import { api } from "./axios";
 import type { ApiResponse, Income, PaginationMeta } from "@/src/types";
 
 export const incomeApi = {
-  async getAll(params: Record<string, string | number | undefined> = {}) {
+    async getAll(params: Record<string, string | number | undefined> = {}) {
     const res = await api.get<ApiResponse<Income[]>>(
       "/income",
       { params },
     );
-    
-    return res.data.data;
+
+    return res.data;
   },
 
   async getDetail(id: string) {

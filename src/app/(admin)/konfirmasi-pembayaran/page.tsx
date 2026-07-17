@@ -115,10 +115,10 @@ export default function KonfirmasiPembayaranPage() {
                 </div>
               </div>
 
-              {(p.paymentProof || p.payment_proof_img) && (
+              {(p.paymentProof || p.paymentProof) && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={p.paymentProof ?? p.payment_proof_img ?? ""}
+                  src={p.paymentProof ?? p.paymentProof ?? ""}
                   alt="Bukti pembayaran"
                   className="mt-3 max-h-56 w-full rounded-xl border border-border object-contain"
                 />

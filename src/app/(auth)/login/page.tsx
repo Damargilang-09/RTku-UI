@@ -36,8 +36,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-surface-secondary px-6 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white">
-            <span className="material-symbols-outlined text-3xl">account_balance</span>
+          <div className="flex h-30 w-30 items-center justify-center rounded-full bg-primary text-white">
+            <img className="w-fit" src="/images/screen.png" alt="Logo RTku" />
           </div>
           <h1 className="text-2xl font-bold text-text-primary">Masuk ke RTku</h1>
           <p className="text-sm text-text-secondary">

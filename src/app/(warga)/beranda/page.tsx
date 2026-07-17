@@ -19,13 +19,13 @@ export default function BerandaPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([billsApi.getMyBills({ limit: 10 }), paymentsApi.getMyPayments({ limit: 5 })])
-      .then(([billsRes, paymentsRes]) => {
-        setBills(billsRes.data);
-        setRecent(paymentsRes.data.formattedPayments);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  Promise.all([billsApi.getMyBills({ limit: 10 }), paymentsApi.getMyPayments({ limit: 5 })])
+    .then(([billsRes, paymentsRes]) => {
+      setBills(billsRes.data);
+      setRecent(paymentsRes.data);
+    })
+    .finally(() => setLoading(false));
+}, []);
 
   if (loading) return <Spinner />;
 

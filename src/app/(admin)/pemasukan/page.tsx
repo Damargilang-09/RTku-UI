@@ -10,14 +10,19 @@ import { Button } from "@/src/components/ui/Button";
 import { Input, Textarea } from "@/src/components/ui/Input";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
+import { Pagination } from "@/src/components/ui/Pagination";
 import { cn, formatRupiah, formatDate } from "@/src/lib/utils";
-import type { ApprovalStatus, Income } from "@/src/types";
+import type { ApprovalStatus, Income, PaginationMeta } from "@/src/types";
+
+const PAGE_SIZE = 10;
 
 const TABS: { value: ApprovalStatus; label: string }[] = [
   { value: "pending", label: "Menunggu" },
   { value: "approved", label: "Disetujui" },
   { value: "rejected", label: "Ditolak" },
 ];
+
+const EMPTY_META: PaginationMeta = { page: 1, limit: PAGE_SIZE, totalData: 0, totalPage: 1 };
 
 function generateIncomeCode() {
   const now = new Date();
@@ -29,6 +34,20 @@ export default function PemasukanPage() {
   const user = useAuthStore((s) => s.user);
   const [tab, setTab] = useState<ApprovalStatus>("pending");
   const [income, setIncome] = useState<Income[]>([]);
+  // Each tab keeps track of its own current page.
+  const [pageByTab, setPageByTab] = useState<Record<ApprovalStatus, number>>({
+    pending: 1,
+    approved: 1,
+    rejected: 1,
+  });
+  // Each tab keeps track of its own pagination meta (total data/pages).
+  const [metaByTab, setMetaByTab] = useState<Record<ApprovalStatus, PaginationMeta>>({
+    pending: EMPTY_META,
+    approved: EMPTY_META,
+    rejected: EMPTY_META,
+  });
+  const page = pageByTab[tab];
+  const meta = metaByTab[tab];
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -47,15 +66,23 @@ export default function PemasukanPage() {
   const load = useCallback(() => {
     setLoading(true);
     incomeApi
-      .getAll({ status: tab, limit: 10 })
-      .then((res) => setIncome(res)) 
-      
+      .getAll({ status: tab, page, limit: PAGE_SIZE })
+      .then((response) => {
+        const items = response.data ?? [];
+        const responseMeta = response.meta ?? { page, limit: PAGE_SIZE, totalData: items.length, totalPage: 1 };
+        setIncome(items);
+        setMetaByTab((prev) => ({ ...prev, [tab]: responseMeta }));
+      })
       .finally(() => setLoading(false));
-  }, [tab]);
+  }, [tab, page]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  function setPage(newPage: number) {
+    setPageByTab((prev) => ({ ...prev, [tab]: newPage }));
+  }
 
   function update(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -212,6 +239,10 @@ export default function PemasukanPage() {
             </Card>
           ))}
         </div>
+      )}
+
+      {!loading && income?.length > 0 && (
+        <Pagination meta={meta} page={page} onPageChange={setPage} itemLabel="pemasukan" />
       )}
     </div>
   );

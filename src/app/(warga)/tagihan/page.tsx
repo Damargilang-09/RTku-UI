@@ -144,8 +144,8 @@ export default function TagihanPage() {
         </div>
       )}
 
-      <Card className="overflow-hidden border-0 bg-primary p-0 text-white shadow-[0_12px_30px_-12px_rgba(0,82,204,0.65)]">
-        <div className="p-5">
+      <Card className="overflow-hidden border-0p-0 text-white shadow-[0_12px_30px_-12px_rgba(0,82,204,0.65)]">
+        <div className="p-5 bg-primary rounded-2xl">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/70">

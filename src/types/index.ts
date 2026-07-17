@@ -63,7 +63,6 @@ export interface Payment {
   status: ApprovalStatus;
   rejectedReason: string | null;
   paymentProof?: string | null;
-  payment_proof_img?: string | null;
   userName?: string;
   feeTypeName?: string;
   approvedBy?: string | null;
@@ -78,12 +77,21 @@ export interface Expense {
   description: string | null;
   amount: number;
   expenseDate: string;
+  createdAt: string;
   status: ApprovalStatus;
   rejectedReason: string | null;
   approvedAt: string | null;
   requestedBy?: string;
   approvedBy?: string | null;
-  images?: { id: string; attachment_url: string }[];
+  expenses_images?:{
+    id: string;
+    attachment_url: string;
+  }[];
+}
+
+export interface ExpenseImage {
+  id: string;
+  attachment_url: string;
 }
 
 export interface Income {
@@ -109,6 +117,10 @@ export interface Report {
   total_expense: number;
   closing_balance: number;
   report_proof_img: string | null;
+  rejected_reason?: string | null;
+  created_at?: string;
+  users_reports_created_byTousers?: { name: string } | null;
+  users_reports_approved_byTousers?: { name: string } | null;
 }
 
 export interface DashboardSummary {

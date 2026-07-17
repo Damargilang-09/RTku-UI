@@ -139,7 +139,7 @@ export default function TagihanDetailPage() {
       )}
 
       <Card className="overflow-hidden border-0 p-0 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.35)]">
-        <div className="bg-primary px-5 pb-6 pt-5 text-white">
+        <div className="bg-primary px-5 pb-6 pt-5 text-white rounded-2xl">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/65">{bill.billCode}</p>
