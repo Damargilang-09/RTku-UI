@@ -1,5 +1,5 @@
 import { api } from "./axios";
-import type { ApiResponse, DashboardSummary, Report, PaginationMeta } from "@/src/types";
+import type { ApiResponse, DashboardSummary, Report } from "@/src/types";
 
 export const reportsApi = {
   async dashboard() {

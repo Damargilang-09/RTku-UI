@@ -20,12 +20,31 @@ const FILTERS: Array<{ value: BillFilter; label: string }> = [
   { value: "paid", label: "Lunas" },
 ];
 
+const PAGE_SIZE = 10;
+
+function getVisiblePages(current: number, total: number): number[] {
+  const delta = 2;
+  const range: number[] = [];
+  for (
+    let i = Math.max(1, current - delta);
+    i <= Math.min(total, current + delta);
+    i++
+  ) {
+    range.push(i);
+  }
+  if (range[0] > 1) range.unshift(1);
+  if (range[range.length - 1] < total) range.push(total);
+  return range;
+}
+
 function getPeriodLabel(bill: Bill) {
   if (bill.periodMonth && bill.periodYear) {
     return `${monthName(bill.periodMonth)} ${bill.periodYear}`;
   }
 
-  return bill.feeType.billingPeriod === "once" ? "Sekali bayar" : "Periode tagihan";
+  return bill.feeType.billingPeriod === "once"
+    ? "Sekali bayar"
+    : "Periode tagihan";
 }
 
 function getDueInformation(bill: Bill) {
@@ -58,7 +77,9 @@ function getDueInformation(bill: Bill) {
   dueDate.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
 
-  const difference = Math.ceil((dueDate.getTime() - today.getTime()) / 86_400_000);
+  const difference = Math.ceil(
+    (dueDate.getTime() - today.getTime()) / 86_400_000,
+  );
 
   if (difference < 0 || bill.status === "overdue") {
     return {
@@ -96,20 +117,32 @@ export default function TagihanPage() {
   const [filter, setFilter] = useState<BillFilter>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
 
   useEffect(() => {
     billsApi
       .getMyBills()
       .then((res) => setBills(res.data))
-      .catch(() => setError("Tagihan belum berhasil dimuat. Silakan coba lagi."))
+      .catch(() =>
+        setError("Tagihan belum berhasil dimuat. Silakan coba lagi."),
+      )
       .finally(() => setLoading(false));
   }, []);
 
   const summary = useMemo(() => {
-    const activeBills = bills.filter((bill) => bill.status === "unpaid" || bill.status === "overdue");
+    const activeBills = bills.filter(
+      (bill) => bill.status === "unpaid" || bill.status === "overdue",
+    );
 
     return {
-      totalDue: activeBills.reduce((total, bill) => total + Number(bill.amount), 0),
+      totalDue: activeBills.reduce(
+        (total, bill) => total + Number(bill.amount),
+        0,
+      ),
       activeCount: activeBills.length,
       pendingCount: bills.filter((bill) => bill.status === "pending").length,
     };
@@ -120,13 +153,22 @@ export default function TagihanPage() {
     [bills, filter],
   );
 
+  const totalPage = Math.max(1, Math.ceil(filteredBills.length / PAGE_SIZE));
+  const paginatedBills = useMemo(
+    () => filteredBills.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredBills, page],
+  );
+  const visiblePages = getVisiblePages(page, totalPage);
+
   if (loading) return <Spinner className="min-h-[60vh]" />;
 
   return (
     <div className="flex flex-col gap-5 px-5 pt-6">
       <div>
         <p className="text-sm font-medium text-primary">Keuangan Warga</p>
-        <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-text-primary">Tagihan Saya</h1>
+        <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-text-primary">
+          Tagihan Saya
+        </h1>
         <p className="mt-1 text-sm leading-5 text-text-secondary">
           Lihat tagihan aktif dan pantau proses pembayaranmu.
         </p>
@@ -138,7 +180,8 @@ export default function TagihanPage() {
           <div>
             <p className="text-sm font-semibold">Bukti pembayaran terkirim</p>
             <p className="mt-0.5 text-xs leading-5">
-              Bendahara akan memeriksa pembayaranmu. Status tagihan berubah setelah disetujui.
+              Bendahara akan memeriksa pembayaranmu. Status tagihan berubah
+              setelah disetujui.
             </p>
           </div>
         </div>
@@ -151,10 +194,14 @@ export default function TagihanPage() {
               <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/70">
                 Total perlu dibayar
               </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight">{formatRupiah(summary.totalDue)}</p>
+              <p className="mt-2 text-3xl font-bold tracking-tight">
+                {formatRupiah(summary.totalDue)}
+              </p>
             </div>
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15">
-              <span className="material-symbols-outlined text-2xl">account_balance_wallet</span>
+              <span className="material-symbols-outlined text-2xl">
+                account_balance_wallet
+              </span>
             </div>
           </div>
 
@@ -198,7 +245,11 @@ export default function TagihanPage() {
       ) : filteredBills.length === 0 ? (
         <EmptyState
           icon={filter === "paid" ? "task_alt" : "receipt_long"}
-          title={filter === "all" ? "Belum ada tagihan" : "Tidak ada tagihan pada kategori ini"}
+          title={
+            filter === "all"
+              ? "Belum ada tagihan"
+              : "Tidak ada tagihan pada kategori ini"
+          }
           description={
             filter === "all"
               ? "Tagihan iuran yang dibuat bendahara akan muncul di sini."
@@ -209,17 +260,26 @@ export default function TagihanPage() {
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-text-primary">
-              {filter === "all" ? "Semua Tagihan" : FILTERS.find((item) => item.value === filter)?.label}
+              {filter === "all"
+                ? "Semua Tagihan"
+                : FILTERS.find((item) => item.value === filter)?.label}
             </h2>
-            <span className="text-xs font-medium text-text-muted">{filteredBills.length} tagihan</span>
+            <span className="text-xs font-medium text-text-muted">
+              {filteredBills.length} tagihan
+            </span>
           </div>
 
-          {filteredBills.map((bill) => {
+          {paginatedBills.map((bill) => {
             const dueInformation = getDueInformation(bill);
-            const canPay = bill.status === "unpaid" || bill.status === "overdue";
+            const canPay =
+              bill.status === "unpaid" || bill.status === "overdue";
 
             return (
-              <Link key={bill.id} href={`/tagihan/${bill.id}`} className="block">
+              <Link
+                key={bill.id}
+                href={`/tagihan/${bill.id}`}
+                className="block"
+              >
                 <Card className="p-0 transition-transform active:scale-[0.99]">
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-3">
@@ -227,14 +287,22 @@ export default function TagihanPage() {
                         <div
                           className={cn(
                             "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
-                            canPay ? "bg-primary-light text-primary" : "bg-surface-tertiary text-text-secondary",
+                            canPay
+                              ? "bg-primary-light text-primary"
+                              : "bg-surface-tertiary text-text-secondary",
                           )}
                         >
-                          <span className="material-symbols-outlined">receipt_long</span>
+                          <span className="material-symbols-outlined">
+                            receipt_long
+                          </span>
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-text-primary">{bill.feeType.name}</p>
-                          <p className="mt-0.5 text-xs text-text-secondary">{getPeriodLabel(bill)}</p>
+                          <p className="truncate text-sm font-bold text-text-primary">
+                            {bill.feeType.name}
+                          </p>
+                          <p className="mt-0.5 text-xs text-text-secondary">
+                            {getPeriodLabel(bill)}
+                          </p>
                         </div>
                       </div>
                       <StatusChip status={bill.status} />
@@ -247,21 +315,77 @@ export default function TagihanPage() {
                           {formatRupiah(bill.amount)}
                         </p>
                       </div>
-                      <span className="material-symbols-outlined text-text-muted">chevron_right</span>
+                      <span className="material-symbols-outlined text-text-muted">
+                        chevron_right
+                      </span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between gap-3 border-t border-surface-tertiary bg-surface-secondary px-4 py-3">
-                    <div className={cn("flex min-w-0 items-center gap-2 text-xs font-medium", dueInformation.className)}>
-                      <span className="material-symbols-outlined shrink-0 text-base">{dueInformation.icon}</span>
+                    <div
+                      className={cn(
+                        "flex min-w-0 items-center gap-2 text-xs font-medium",
+                        dueInformation.className,
+                      )}
+                    >
+                      <span className="material-symbols-outlined shrink-0 text-base">
+                        {dueInformation.icon}
+                      </span>
                       <span className="truncate">{dueInformation.label}</span>
                     </div>
-                    {canPay && <span className="shrink-0 text-xs font-bold text-primary">Bayar</span>}
+                    {canPay && (
+                      <span className="shrink-0 text-xs font-bold text-primary">
+                        Bayar
+                      </span>
+                    )}
                   </div>
                 </Card>
               </Link>
             );
           })}
+          {totalPage > 1 && (
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                disabled={page === 1}
+                onClick={() => setPage(Math.max(1, page - 1))}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface text-text-secondary disabled:opacity-40"
+              >
+                <span className="material-symbols-outlined text-base">
+                  chevron_left
+                </span>
+              </button>
+              {visiblePages.map((number, index) => (
+                <div key={number} className="flex items-center gap-1">
+                  {visiblePages[index - 1] &&
+                    number - visiblePages[index - 1] > 1 && (
+                      <span className="px-1 text-text-muted">…</span>
+                    )}
+                  <button
+                    type="button"
+                    onClick={() => setPage(number)}
+                    className={`h-9 min-w-9 rounded-xl px-3 text-sm font-semibold ${
+                      page === number
+                        ? "bg-primary text-white"
+                        : "bg-surface text-text-secondary hover:bg-surface-tertiary"
+                    }`}
+                  >
+                    {number}
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                disabled={page === totalPage}
+                onClick={() => setPage(Math.min(totalPage, page + 1))}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface text-text-secondary disabled:opacity-40"
+              >
+                <span className="material-symbols-outlined text-base">
+                  chevron_right
+                </span>
+              </button>
+            </div>
+          )}
         </section>
       )}
     </div>

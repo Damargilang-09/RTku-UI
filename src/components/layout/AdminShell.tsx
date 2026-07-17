@@ -31,7 +31,7 @@ const NAV_ITEMS = [
     href: "/konfirmasi-pembayaran",
     icon: "fact_check",
     label: "Konfirmasi Pembayaran",
-    roles: ["bendahara", "ketuaRT"],
+    roles: ["bendahara"],
   },
   {
     href: "/pengeluaran",

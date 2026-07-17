@@ -22,6 +22,7 @@ function getPeriodLabel(bill: Bill) {
   return bill.feeType.billingPeriod === "once" ? "Sekali bayar" : "-";
 }
 
+
 export default function TagihanDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();

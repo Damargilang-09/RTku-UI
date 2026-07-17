@@ -11,7 +11,6 @@ import { Button } from "@/src/components/ui/Button";
 import { Textarea } from "@/src/components/ui/Input";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
-import { Pagination } from "@/src/components/ui/Pagination";
 import { cn, formatRupiah, formatDate } from "@/src/lib/utils";
 import type { ApprovalStatus, Expense, PaginationMeta } from "@/src/types";
 

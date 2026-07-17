@@ -90,7 +90,7 @@ export default function TransaksiPage() {
             ))}
           </div>
 
-          <div className="fixed bottom-16  left-0 right-0  flex-col gap-5   border-border bg-surface px-4 py-3">
+          <div className="fixed bottom-16  left-0 right-0  flex-col gap-5   px-4 py-3">
             <p className="flex justify-center pb-4 text-xs text-text-secondary">
               Menampilkan {(meta.page - 1) * meta.limit + 1}–
               {Math.min(meta.page * meta.limit, meta.totalData)} dari{" "}
