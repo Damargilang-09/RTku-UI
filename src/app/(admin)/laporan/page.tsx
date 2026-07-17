@@ -11,16 +11,24 @@ import { Button } from "@/src/components/ui/Button";
 import { Textarea } from "@/src/components/ui/Input";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
-import { Pagination } from "@/src/components/ui/Pagination";
 import { formatRupiah, monthName } from "@/src/lib/utils";
-import type { Report } from "@/src/types";
+import type { PaginationMeta, Report } from "@/src/types";
+
+const PAGE_SIZE = 10;
+
+const EMPTY_META: PaginationMeta = {
+  page: 1,
+  limit: PAGE_SIZE,
+  totalData: 0,
+  totalPage: 1,
+};
+
 
 export default function LaporanKeuanganPage() {
   const user = useAuthStore((s) => s.user);
   const [reports, setReports] = useState<Report[]>([]);
   const [page, setPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const PAGE_SIZE = 12;
+  const [meta, setMeta] = useState<PaginationMeta>(EMPTY_META);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -33,9 +41,10 @@ export default function LaporanKeuanganPage() {
     reportsApi
       .getAll({ page, limit: PAGE_SIZE })
       .then((res) => {
-        const items = res.data ?? [];
-        setReports(items);
-        setHasNextPage(items.length === PAGE_SIZE);
+        setReports(res.data);
+         setMeta(
+          res.meta ?? { ...EMPTY_META, page, totalData: res.data.length },
+        );
       })
       .finally(() => setLoading(false));
   }, [page]);
@@ -43,6 +52,16 @@ export default function LaporanKeuanganPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+   const visiblePages = Array.from(
+    { length: meta.totalPage },
+    (_, index) => index + 1,
+  ).filter(
+    (number) =>
+      number === 1 || number === meta.totalPage || Math.abs(number - page) <= 1,
+  );
+
+  if (loading) return <Spinner />;
 
   async function handleUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -180,10 +199,56 @@ export default function LaporanKeuanganPage() {
           ))}
         </div>
       )}
-
-      {!loading && reports?.length > 0 && (
-        <Pagination page={page} hasNextPage={hasNextPage} onPageChange={setPage} loading={loading} />
-      )}
+<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-text-secondary">
+              Menampilkan {(meta.page - 1) * meta.limit + 1}–
+              {Math.min(meta.page * meta.limit, meta.totalData)} dari{" "}
+              {meta.totalData} laporan
+            </p>
+            {meta.totalPage > 1 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="secondary"
+                  className="px-3 py-2 text-xs"
+                  disabled={page === 1}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                >
+                  <span className="material-symbols-outlined text-base">
+                    chevron_left
+                  </span>
+                  Sebelumnya
+                </Button>
+                {visiblePages.map((number, index) => (
+                  <div key={number} className="flex items-center gap-2">
+                    {visiblePages[index - 1] &&
+                      number - visiblePages[index - 1] > 1 && (
+                        <span className="px-1 text-text-muted">…</span>
+                      )}
+                    <button
+                      type="button"
+                      onClick={() => setPage(number)}
+                      className={`h-9 min-w-9 rounded-xl px-3 text-sm font-semibold ${page === number ? "bg-primary text-white" : "bg-surface text-text-secondary hover:bg-surface-tertiary"}`}
+                    >
+                      {number}
+                    </button>
+                  </div>
+                ))}
+                <Button
+                  variant="secondary"
+                  className="px-3 py-2 text-xs"
+                  disabled={page === meta.totalPage}
+                  onClick={() =>
+                    setPage((current) => Math.min(meta.totalPage, current + 1))
+                  }
+                >
+                  Berikutnya
+                  <span className="material-symbols-outlined text-base">
+                    chevron_right
+                  </span>
+                </Button>
+              </div>
+            )}
+          </div>
     </div>
   );
 }

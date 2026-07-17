@@ -43,7 +43,7 @@ export default function DetailTransaksiPage() {
         <Link href="/transaksi" className="text-text-secondary">
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
-        <h1 className="text-lg font-bold text-text-primary">Detail Transaksi</h1>
+        <h1 className="text-lg font-bold text-text-primary">Detail Transaksi</h1>w
       </div>
 
       {error && <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">{error}</div>}

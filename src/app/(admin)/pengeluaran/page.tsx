@@ -30,6 +30,17 @@ const EMPTY_META: PaginationMeta = {
   totalPage: 1,
 };
 
+function getVisiblePages(current: number, total: number): number[] {
+  const delta = 2;
+  const range: number[] = [];
+  for (let i = Math.max(1, current - delta); i <= Math.min(total, current + delta); i++) {
+    range.push(i);
+  }
+  if (range[0] > 1) range.unshift(1);
+  if (range[range.length - 1] < total) range.push(total);
+  return range;
+}
+
 export default function PengeluaranPage() {
   const user = useAuthStore((s) => s.user);
   const [tab, setTab] = useState<ApprovalStatus>("pending");
@@ -49,6 +60,7 @@ export default function PengeluaranPage() {
   });
   const page = pageByTab[tab];
   const meta = metaByTab[tab];
+  const visiblePages = getVisiblePages(page, meta.totalPage);
   const [loading, setLoading] = useState(true);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -288,15 +300,53 @@ export default function PengeluaranPage() {
           ))}
         </div>
       )}
-
-      {!loading && expenses?.length > 0 && (
-        <Pagination
-          page={page}
-          hasNextPage={page < meta.totalPage} // ✅ ini hasilnya boolean (true/false)
-          onPageChange={setPage}
-          loading={loading}
-        />
-      )}
+{!loading && expenses?.length > 0 && (
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <p className="text-sm text-text-secondary">
+      Menampilkan {(meta.page - 1) * meta.limit + 1}–
+      {Math.min(meta.page * meta.limit, meta.totalData)} dari{" "}
+      {meta.totalData} pengeluaran
+    </p>
+    {meta.totalPage > 1 && (
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant="secondary"
+          className="px-3 py-2 text-xs"
+          disabled={page === 1}
+          onClick={() => setPage(Math.max(1, page - 1))}
+        >
+          <span className="material-symbols-outlined text-base">chevron_left</span>
+          Sebelumnya
+        </Button>
+        {visiblePages.map((number, index) => (
+          <div key={number} className="flex items-center gap-2">
+            {visiblePages[index - 1] && number - visiblePages[index - 1] > 1 && (
+              <span className="px-1 text-text-muted">…</span>
+            )}
+            <button
+              type="button"
+              onClick={() => setPage(number)}
+              className={`h-9 min-w-9 rounded-xl px-3 text-sm font-semibold ${
+                page === number ? "bg-primary text-white" : "bg-surface text-text-secondary hover:bg-surface-tertiary"
+              }`}
+            >
+              {number}
+            </button>
+          </div>
+        ))}
+        <Button
+          variant="secondary"
+          className="px-3 py-2 text-xs"
+          disabled={page === meta.totalPage}
+          onClick={() => setPage(Math.min(meta.totalPage, page + 1))}
+        >
+          Berikutnya
+          <span className="material-symbols-outlined text-base">chevron_right</span>
+        </Button>
+      </div>
+    )}
+  </div>
+)}
     </div>
   );
 }

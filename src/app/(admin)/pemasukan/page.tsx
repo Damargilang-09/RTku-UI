@@ -22,12 +22,32 @@ const TABS: { value: ApprovalStatus; label: string }[] = [
   { value: "rejected", label: "Ditolak" },
 ];
 
-const EMPTY_META: PaginationMeta = { page: 1, limit: PAGE_SIZE, totalData: 0, totalPage: 1 };
+const EMPTY_META: PaginationMeta = {
+  page: 1,
+  limit: PAGE_SIZE,
+  totalData: 0,
+  totalPage: 1,
+};
 
 function generateIncomeCode() {
   const now = new Date();
   const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
   return `INC-${date}-${Math.floor(Math.random() * 900 + 100)}`;
+}
+
+function getVisiblePages(current: number, total: number): number[] {
+  const delta = 2;
+  const range: number[] = [];
+  for (
+    let i = Math.max(1, current - delta);
+    i <= Math.min(total, current + delta);
+    i++
+  ) {
+    range.push(i);
+  }
+  if (range[0] > 1) range.unshift(1);
+  if (range[range.length - 1] < total) range.push(total);
+  return range;
 }
 
 export default function PemasukanPage() {
@@ -41,13 +61,17 @@ export default function PemasukanPage() {
     rejected: 1,
   });
   // Each tab keeps track of its own pagination meta (total data/pages).
-  const [metaByTab, setMetaByTab] = useState<Record<ApprovalStatus, PaginationMeta>>({
+  const [metaByTab, setMetaByTab] = useState<
+    Record<ApprovalStatus, PaginationMeta>
+  >({
     pending: EMPTY_META,
     approved: EMPTY_META,
     rejected: EMPTY_META,
   });
   const page = pageByTab[tab];
   const meta = metaByTab[tab];
+  const visiblePages = getVisiblePages(page, meta.totalPage);
+
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -69,7 +93,12 @@ export default function PemasukanPage() {
       .getAll({ status: tab, page, limit: PAGE_SIZE })
       .then((response) => {
         const items = response.data ?? [];
-        const responseMeta = response.meta ?? { page, limit: PAGE_SIZE, totalData: items.length, totalPage: 1 };
+        const responseMeta = response.meta ?? {
+          page,
+          limit: PAGE_SIZE,
+          totalData: items.length,
+          totalPage: 1,
+        };
         setIncome(items);
         setMetaByTab((prev) => ({ ...prev, [tab]: responseMeta }));
       })
@@ -101,10 +130,18 @@ export default function PemasukanPage() {
         income_date: form.income_date,
       });
       setShowForm(false);
-      setForm({ income_code: generateIncomeCode(), title: "", description: "", amount: "", income_date: new Date().toISOString().slice(0, 10) });
+      setForm({
+        income_code: generateIncomeCode(),
+        title: "",
+        description: "",
+        amount: "",
+        income_date: new Date().toISOString().slice(0, 10),
+      });
       load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal menyimpan pemasukan");
+      setError(
+        err instanceof ApiError ? err.message : "Gagal menyimpan pemasukan",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -116,7 +153,9 @@ export default function PemasukanPage() {
       await incomeApi.approve(id, { status: "approved" });
       load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal menyetujui pemasukan");
+      setError(
+        err instanceof ApiError ? err.message : "Gagal menyetujui pemasukan",
+      );
     } finally {
       setBusyId(null);
     }
@@ -129,17 +168,21 @@ export default function PemasukanPage() {
     }
     setBusyId(id);
     try {
-      await incomeApi.approve(id, { status: "rejected", rejected_reason: reason.trim() });
+      await incomeApi.approve(id, {
+        status: "rejected",
+        rejected_reason: reason.trim(),
+      });
       setRejectingId(null);
       setReason("");
       load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal menolak pemasukan");
+      setError(
+        err instanceof ApiError ? err.message : "Gagal menolak pemasukan",
+      );
     } finally {
       setBusyId(null);
     }
   }
-
 
   const canApprove = user?.role === "ketuaRT";
   const canCreate = user?.role === "bendahara";
@@ -148,8 +191,12 @@ export default function PemasukanPage() {
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Pemasukan Lain</h1>
-          <p className="text-sm text-text-secondary">Sumbangan, donasi, dan pemasukan di luar iuran warga.</p>
+          <h1 className="text-2xl font-bold text-text-primary">
+            Pemasukan Lain
+          </h1>
+          <p className="text-sm text-text-secondary">
+            Sumbangan, donasi, dan pemasukan di luar iuran warga.
+          </p>
         </div>
         {canCreate && (
           <Button onClick={() => setShowForm((v) => !v)}>
@@ -160,15 +207,56 @@ export default function PemasukanPage() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="flex flex-col gap-4 rounded-card border border-border bg-surface p-6">
-          <Input label="Kode Pemasukan" value={form.income_code} onChange={(e) => update("income_code", e.target.value)} required />
-          <Input label="Judul" placeholder="Contoh: Donasi Fogging" value={form.title} onChange={(e) => update("title", e.target.value)} required />
-          <Textarea label="Deskripsi" value={form.description} onChange={(e) => update("description", e.target.value)} required rows={2} />
-          <Input label="Jumlah (Rp)" type="number" min={1} value={form.amount} onChange={(e) => update("amount", e.target.value)} required />
-          <Input label="Tanggal" type="date" value={form.income_date} onChange={(e) => update("income_date", e.target.value)} required />
+        <form
+          onSubmit={handleCreate}
+          className="flex flex-col gap-4 rounded-card border border-border bg-surface p-6"
+        >
+          <Input
+            label="Kode Pemasukan"
+            value={form.income_code}
+            onChange={(e) => update("income_code", e.target.value)}
+            required
+          />
+          <Input
+            label="Judul"
+            placeholder="Contoh: Donasi Fogging"
+            value={form.title}
+            onChange={(e) => update("title", e.target.value)}
+            required
+          />
+          <Textarea
+            label="Deskripsi"
+            value={form.description}
+            onChange={(e) => update("description", e.target.value)}
+            required
+            rows={2}
+          />
+          <Input
+            label="Jumlah (Rp)"
+            type="number"
+            min={1}
+            value={form.amount}
+            onChange={(e) => update("amount", e.target.value)}
+            required
+          />
+          <Input
+            label="Tanggal"
+            type="date"
+            value={form.income_date}
+            onChange={(e) => update("income_date", e.target.value)}
+            required
+          />
           <div className="flex gap-2">
-            <Button type="submit" loading={submitting}>Simpan</Button>
-            <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Batal</Button>
+            <Button type="submit" loading={submitting}>
+              Simpan
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowForm(false)}
+            >
+              Batal
+            </Button>
           </div>
         </form>
       )}
@@ -180,7 +268,9 @@ export default function PemasukanPage() {
             onClick={() => setTab(t.value)}
             className={cn(
               "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-              tab === t.value ? "bg-primary text-white" : "bg-surface-tertiary text-text-secondary hover:bg-border",
+              tab === t.value
+                ? "bg-primary text-white"
+                : "bg-surface-tertiary text-text-secondary hover:bg-border",
             )}
           >
             {t.label}
@@ -188,24 +278,42 @@ export default function PemasukanPage() {
         ))}
       </div>
 
-      {error && <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">{error}</div>}
+      {error && (
+        <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <Spinner />
       ) : income?.length === 0 ? (
-        <EmptyState icon="trending_up" title="Tidak ada data" description="Belum ada pemasukan pada status ini." />
+        <EmptyState
+          icon="trending_up"
+          title="Tidak ada data"
+          description="Belum ada pemasukan pada status ini."
+        />
       ) : (
         <div className="flex flex-col gap-3">
           {income?.map((inc) => (
             <Card key={inc.id}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-text-primary">{inc.title}</p>
-                  <p className="text-xs text-text-secondary">{inc.income_code} &middot; {formatDate(inc.income_date)}</p>
-                  {inc.description && <p className="mt-1 text-xs text-text-muted">{inc.description}</p>}
+                  <p className="text-sm font-semibold text-text-primary">
+                    {inc.title}
+                  </p>
+                  <p className="text-xs text-text-secondary">
+                    {inc.income_code} &middot; {formatDate(inc.income_date)}
+                  </p>
+                  {inc.description && (
+                    <p className="mt-1 text-xs text-text-muted">
+                      {inc.description}
+                    </p>
+                  )}
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className="text-base font-bold text-secondary-dark">{formatRupiah(inc.amount)}</span>
+                  <span className="text-base font-bold text-secondary-dark">
+                    {formatRupiah(inc.amount)}
+                  </span>
                   <StatusChip status={inc.status} />
                 </div>
               </div>
@@ -214,19 +322,51 @@ export default function PemasukanPage() {
                 <div className="mt-4 flex flex-col gap-3">
                   {rejectingId === inc.id ? (
                     <>
-                      <Textarea placeholder="Alasan penolakan" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} />
+                      <Textarea
+                        placeholder="Alasan penolakan"
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        rows={2}
+                      />
                       <div className="flex gap-2">
-                        <Button variant="danger" loading={busyId === inc.id} onClick={() => handleReject(inc.id)}>Kirim Penolakan</Button>
-                        <Button variant="secondary" onClick={() => { setRejectingId(null); setReason(""); }}>Batal</Button>
+                        <Button
+                          variant="danger"
+                          loading={busyId === inc.id}
+                          onClick={() => handleReject(inc.id)}
+                        >
+                          Kirim Penolakan
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setRejectingId(null);
+                            setReason("");
+                          }}
+                        >
+                          Batal
+                        </Button>
                       </div>
                     </>
                   ) : (
                     <div className="flex gap-2">
-                      <Button variant="success" loading={busyId === inc.id} onClick={() => handleApprove(inc.id)}>
-                        <span className="material-symbols-outlined text-base">check</span>Setujui
+                      <Button
+                        variant="success"
+                        loading={busyId === inc.id}
+                        onClick={() => handleApprove(inc.id)}
+                      >
+                        <span className="material-symbols-outlined text-base">
+                          check
+                        </span>
+                        Setujui
                       </Button>
-                      <Button variant="danger" onClick={() => setRejectingId(inc.id)}>
-                        <span className="material-symbols-outlined text-base">close</span>Tolak
+                      <Button
+                        variant="danger"
+                        onClick={() => setRejectingId(inc.id)}
+                      >
+                        <span className="material-symbols-outlined text-base">
+                          close
+                        </span>
+                        Tolak
                       </Button>
                     </div>
                   )}
@@ -234,15 +374,67 @@ export default function PemasukanPage() {
               )}
 
               {inc.status === "rejected" && inc.rejected_reason && (
-                <p className="mt-3 rounded-xl bg-danger-bg px-3 py-2 text-xs text-danger">Alasan: {inc.rejected_reason}</p>
+                <p className="mt-3 rounded-xl bg-danger-bg px-3 py-2 text-xs text-danger">
+                  Alasan: {inc.rejected_reason}
+                </p>
               )}
             </Card>
           ))}
         </div>
       )}
-
       {!loading && income?.length > 0 && (
-        <Pagination meta={meta} page={page} onPageChange={setPage} itemLabel="pemasukan" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-text-secondary">
+            Menampilkan {(meta.page - 1) * meta.limit + 1}–
+            {Math.min(meta.page * meta.limit, meta.totalData)} dari{" "}
+            {meta.totalData} pemasukan
+          </p>
+          {meta.totalPage > 1 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="secondary"
+                className="px-3 py-2 text-xs"
+                disabled={page === 1}
+                onClick={() => setPage(Math.max(1, page - 1))}
+              >
+                <span className="material-symbols-outlined text-base">
+                  chevron_left
+                </span>
+                Sebelumnya
+              </Button>
+              {visiblePages.map((number, index) => (
+                <div key={number} className="flex items-center gap-2">
+                  {visiblePages[index - 1] &&
+                    number - visiblePages[index - 1] > 1 && (
+                      <span className="px-1 text-text-muted">…</span>
+                    )}
+                  <button
+                    type="button"
+                    onClick={() => setPage(number)}
+                    className={`h-9 min-w-9 rounded-xl px-3 text-sm font-semibold ${
+                      page === number
+                        ? "bg-primary text-white"
+                        : "bg-surface text-text-secondary hover:bg-surface-tertiary"
+                    }`}
+                  >
+                    {number}
+                  </button>
+                </div>
+              ))}
+              <Button
+                variant="secondary"
+                className="px-3 py-2 text-xs"
+                disabled={page === meta.totalPage}
+                onClick={() => setPage(Math.min(meta.totalPage, page + 1))}
+              >
+                Berikutnya
+                <span className="material-symbols-outlined text-base">
+                  chevron_right
+                </span>
+              </Button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
