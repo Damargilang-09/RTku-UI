@@ -15,7 +15,7 @@ export interface GenerateBillsPayload {
   feeTypeId: string;
   periodMonth?: number;
   periodYear?: number;
-  dueDate: string;
+  dueDate?: string;
 }
 
 export interface GenerateBillsResult {
