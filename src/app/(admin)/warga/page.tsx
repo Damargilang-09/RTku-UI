@@ -56,6 +56,27 @@ export default function KelolaWargaPage() {
       setBusyId(null);
     }
   }
+
+  async function deleteUser(user: User) {
+    const confirmed = window.confirm(
+      `Hapus akun ${user.name}? Histori transaksi user tetap tersimpan.`,
+    );
+
+    if (!confirmed) return;
+
+    setBusyId(user.id);
+    setError(null);
+
+    try {
+      await usersApi.delete(user.id);
+      load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Gagal menghapus warga");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -122,6 +143,14 @@ export default function KelolaWargaPage() {
                       onClick={() => toggleRole(user)}
                     >
                       Jadikan {user.role === "bendahara" ? "Warga" : "Bendahara"}
+                    </Button>
+                    <Button
+                      variant="danger"
+                      className="px-3 py-1.5 text-xs"
+                      loading={busyId === user.id}
+                      onClick={() => deleteUser(user)}
+                    >
+                      Hapus
                     </Button>
                   </>
                 )}
