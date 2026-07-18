@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { billsApi } from "@/src/lib/api/bills";
@@ -26,6 +26,15 @@ function getPeriodLabel(bill: Bill) {
   }
 
   return bill.feeType.billingPeriod === "once" ? "Sekali bayar" : "-";
+}
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const ALLOWED_FILE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
+
+function getFileExtension(fileName: string) {
+  const dotIndex = fileName.lastIndexOf(".");
+  return dotIndex >= 0 ? fileName.slice(dotIndex).toLowerCase() : "";
 }
 
 export default function TagihanDetailPage() {
@@ -65,12 +74,43 @@ export default function TagihanDetailPage() {
     };
   }, [preview]);
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0] ?? null;
 
     if (preview) URL.revokeObjectURL(preview);
+
+    if (!selectedFile) {
+      setFile(null);
+      setPreview(null);
+      return;
+    }
+
+    const extension = getFileExtension(selectedFile.name);
+    const hasValidType = ALLOWED_FILE_TYPES.includes(selectedFile.type);
+    const hasValidExtension = ALLOWED_FILE_EXTENSIONS.includes(extension);
+
+    if (!hasValidType || !hasValidExtension) {
+      setFile(null);
+      setPreview(null);
+      setError("Format file harus JPG, JPEG, PNG, atau PDF.");
+      event.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      setFile(null);
+      setPreview(null);
+      setError("Ukuran file maksimal 5 MB.");
+      event.target.value = "";
+      return;
+    }
+
     setFile(selectedFile);
-    setPreview(selectedFile ? URL.createObjectURL(selectedFile) : null);
+    setPreview(
+      selectedFile.type === "application/pdf"
+        ? null
+        : URL.createObjectURL(selectedFile),
+    );
     setError(null);
   }
 
@@ -329,7 +369,7 @@ export default function TagihanDetailPage() {
               Bayar Tagihan
             </h3>
             <p className="mt-1 text-sm leading-5 text-text-secondary">
-              Transfer sesuai nominal tagihan, lalu unggah foto bukti
+              Transfer sesuai nominal tagihan, lalu unggah foto atau PDF bukti
               pembayaran.
             </p>
           </div>
@@ -351,7 +391,7 @@ export default function TagihanDetailPage() {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-text-primary">
-              Foto Bukti Transfer
+              Bukti Pembayaran (Foto/PDF)
             </label>
             <label className="relative flex min-h-44 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-surface px-4 py-6 text-center transition-colors active:bg-surface-tertiary">
               {preview ? (
@@ -363,27 +403,44 @@ export default function TagihanDetailPage() {
                     className="max-h-56 w-full rounded-xl object-contain"
                   />
                   <span className="mt-3 text-xs font-semibold text-primary">
-                    Ketuk untuk mengganti foto
+                    Ketuk untuk mengganti file
+                  </span>
+                </>
+              ) : file?.type === "application/pdf" ? (
+                <>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-danger-bg text-danger">
+                    <span className="material-symbols-outlined text-2xl">
+                      picture_as_pdf
+                    </span>
+                  </div>
+                  <p className="mt-3 max-w-full truncate text-sm font-bold text-text-primary">
+                    {file.name}
+                  </p>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    PDF siap diunggah
+                  </p>
+                  <span className="mt-3 text-xs font-semibold text-primary">
+                    Ketuk untuk mengganti file
                   </span>
                 </>
               ) : (
                 <>
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-light text-primary">
                     <span className="material-symbols-outlined text-2xl">
-                      add_photo_alternate
+                      upload_file
                     </span>
                   </div>
                   <p className="mt-3 text-sm font-bold text-text-primary">
-                    Unggah bukti pembayaran
+                    Unggah foto atau PDF
                   </p>
                   <p className="mt-1 text-xs text-text-secondary">
-                    PNG, JPG, atau WEBP
+                    JPG, JPEG, PNG, atau PDF · Maks. 5 MB
                   </p>
                 </>
               )}
               <input
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
                 className="hidden"
                 onChange={handleFileChange}
               />

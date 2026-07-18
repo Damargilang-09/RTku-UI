@@ -8,6 +8,7 @@ import { StatusChip } from "@/src/components/ui/StatusChip";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
 import { formatRupiah, formatDate, monthName } from "@/src/lib/utils";
+import { isPdfUrl } from "@/src/lib/file-utils";
 import type { PaginationMeta, Report } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 
@@ -86,28 +87,36 @@ export default function RiwayatLaporanPage() {
               key={r.id}
               className="flex flex-col gap-4 sm:flex-row sm:items-start"
             >
-              <button
-                type="button"
-                onClick={() =>
-                  r.report_proof_img && setOpenImage(r.report_proof_img)
-                }
-                className="shrink-0"
-              >
-                {r.report_proof_img ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={r.report_proof_img}
-                    alt={`Bukti laporan ${monthName(r.period_month)} ${r.period_year}`}
-                    className="h-28 w-full rounded-xl border border-border object-cover sm:w-40"
-                  />
+              {r.report_proof_img ? (
+                isPdfUrl(r.report_proof_img) ? (
+                  <a
+                    href={r.report_proof_img}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-28 w-full shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-surface-tertiary text-danger hover:bg-border sm:w-40"
+                  >
+                    <span className="material-symbols-outlined text-3xl">picture_as_pdf</span>
+                    <span className="mt-1 text-xs font-semibold">Buka PDF</span>
+                  </a>
                 ) : (
-                  <div className="flex h-28 w-full items-center justify-center rounded-xl border border-dashed border-border bg-surface-tertiary text-text-muted sm:w-40">
-                    <span className="material-symbols-outlined">
-                      image_not_supported
-                    </span>
-                  </div>
-                )}
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => setOpenImage(r.report_proof_img)}
+                    className="shrink-0"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={r.report_proof_img}
+                      alt={`Bukti laporan ${monthName(r.period_month)} ${r.period_year}`}
+                      className="h-28 w-full rounded-xl border border-border object-cover sm:w-40"
+                    />
+                  </button>
+                )
+              ) : (
+                <div className="flex h-28 w-full shrink-0 items-center justify-center rounded-xl border border-dashed border-border bg-surface-tertiary text-text-muted sm:w-40">
+                  <span className="material-symbols-outlined">image_not_supported</span>
+                </div>
+              )}
 
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-2">

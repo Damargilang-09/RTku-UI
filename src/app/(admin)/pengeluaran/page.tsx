@@ -12,6 +12,7 @@ import { Textarea } from "@/src/components/ui/Input";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
 import { cn, formatRupiah, formatDate } from "@/src/lib/utils";
+import { isPdfUrl } from "@/src/lib/file-utils";
 import type { ApprovalStatus, Expense, PaginationMeta } from "@/src/types";
 
 const PAGE_SIZE = 10;
@@ -212,15 +213,28 @@ export default function PengeluaranPage() {
 
               {exp.expenses_image && exp.expenses_image.length > 0 && (
                 <div className="mt-3 flex gap-2 overflow-x-auto">
-                  {exp.expenses_image.map((img) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={img.id}
-                      src={img.attachment_url}
-                      alt="Bukti pengeluaran"
-                      className="h-24 w-24 shrink-0 rounded-xl border border-border object-cover"
-                    />
-                  ))}
+                  {exp.expenses_image.map((img) =>
+                    isPdfUrl(img.attachment_url) ? (
+                      <a
+                        key={img.id}
+                        href={img.attachment_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-surface-tertiary text-danger hover:bg-border"
+                      >
+                        <span className="material-symbols-outlined text-3xl">picture_as_pdf</span>
+                        <span className="mt-1 text-xs font-semibold">Buka PDF</span>
+                      </a>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={img.id}
+                        src={img.attachment_url}
+                        alt="Bukti pengeluaran"
+                        className="h-24 w-24 shrink-0 rounded-xl border border-border object-cover"
+                      />
+                    ),
+                  )}
                 </div>
               )}
 

@@ -12,6 +12,7 @@ import { Textarea } from "@/src/components/ui/Input";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
 import { formatRupiah, monthName } from "@/src/lib/utils";
+import { isPdfUrl, UPLOAD_FILE_ACCEPT, validateUploadFile } from "@/src/lib/file-utils";
 import type { PaginationMeta, Report } from "@/src/types";
 
 const PAGE_SIZE = 10;
@@ -67,6 +68,14 @@ export default function LaporanKeuanganPage() {
   async function handleUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const validationError = validateUploadFile(file);
+    if (validationError) {
+      setError(validationError);
+      e.target.value = "";
+      return;
+    }
+
     setUploading(true);
     setError(null);
     try {
@@ -89,6 +98,14 @@ export default function LaporanKeuanganPage() {
   async function handleResubmit(id: string, e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const validationError = validateUploadFile(file);
+    if (validationError) {
+      setError(validationError);
+      e.target.value = "";
+      return;
+    }
+
     setResubmittingId(id);
     setError(null);
     try {
@@ -171,11 +188,11 @@ export default function LaporanKeuanganPage() {
                 <span className="material-symbols-outlined text-base">
                   {uploading ? "progress_activity" : "upload_file"}
                 </span>
-                Buat Laporan Bulan Ini
+                Buat Laporan (Foto/PDF)
               </span>
               <input
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept={UPLOAD_FILE_ACCEPT}
                 className="hidden"
                 onChange={handleUpload}
                 disabled={uploading}
@@ -211,20 +228,31 @@ export default function LaporanKeuanganPage() {
               </div>
 
               {/* Preview bukti laporan */}
-              {r.report_proof_img && (
-                <button
-                  type="button"
-                  onClick={() => setOpenImage(r.report_proof_img)}
-                  className="mt-3 block w-full"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={r.report_proof_img}
-                    alt={`Bukti laporan ${monthName(r.period_month)} ${r.period_year}`}
-                    className="h-40 w-full rounded-xl border border-border object-cover"
-                  />
-                </button>
-              )}
+              {r.report_proof_img &&
+                (isPdfUrl(r.report_proof_img) ? (
+                  <a
+                    href={r.report_proof_img}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 flex h-40 w-full flex-col items-center justify-center rounded-xl border border-border bg-surface-tertiary text-center text-danger hover:bg-border"
+                  >
+                    <span className="material-symbols-outlined text-4xl">picture_as_pdf</span>
+                    <span className="mt-2 text-sm font-semibold">Buka Bukti PDF</span>
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setOpenImage(r.report_proof_img)}
+                    className="mt-3 block w-full"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={r.report_proof_img}
+                      alt={`Bukti laporan ${monthName(r.period_month)} ${r.period_year}`}
+                      className="h-40 w-full rounded-xl border border-border object-cover"
+                    />
+                  </button>
+                ))}
               <div className="mt-3 grid grid-cols-2 gap-y-2 text-sm">
                 <span className="text-text-secondary">Saldo Awal</span>
                 <span className="text-right font-medium text-text-primary">
@@ -261,11 +289,11 @@ export default function LaporanKeuanganPage() {
                         ? "progress_activity"
                         : "upload_file"}
                     </span>
-                    Unggah Ulang Bukti
+                    Unggah Ulang Foto/PDF
                   </span>
                   <input
                     type="file"
-                    accept="image/png,image/jpeg,image/webp"
+                    accept={UPLOAD_FILE_ACCEPT}
                     className="hidden"
                     disabled={resubmittingId === r.id}
                     onChange={(e) => handleResubmit(r.id, e)}

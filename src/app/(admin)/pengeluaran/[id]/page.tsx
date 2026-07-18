@@ -8,6 +8,7 @@ import { ApiError } from "@/src/lib/api/axios";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { StatusChip } from "@/src/components/ui/StatusChip";
 import { formatDate, formatDateTime, formatRupiah } from "@/src/lib/utils";
+import { isPdfUrl } from "@/src/lib/file-utils";
 import type { Expense, ExpenseImage,  } from "@/src/types";
 
 export default function DetailPengeluaranPage() {
@@ -93,24 +94,37 @@ export default function DetailPengeluaranPage() {
             <p className="text-xs uppercase text-text-muted">Bukti Pengeluaran</p>
             {expense.expenses_image && expense.expenses_image.length > 0 ? (
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {images.map((img) => (
-                  <button
-                    key={img.id}
-                    type="button"
-                    onClick={() => setOpenImage(img.attachment_url)}
-                    className="aspect-square overflow-hidden rounded-xl border border-border"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={img.attachment_url}
-                      alt="Bukti pengeluaran"
-                      className="h-full w-full object-cover transition-transform hover:scale-105"
-                    />
-                  </button>
-                ))}
+                {images.map((img) =>
+                  isPdfUrl(img.attachment_url) ? (
+                    <a
+                      key={img.id}
+                      href={img.attachment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex aspect-square flex-col items-center justify-center rounded-xl border border-border bg-surface-tertiary text-danger hover:bg-border"
+                    >
+                      <span className="material-symbols-outlined text-4xl">picture_as_pdf</span>
+                      <span className="mt-2 text-xs font-semibold">Buka PDF</span>
+                    </a>
+                  ) : (
+                    <button
+                      key={img.id}
+                      type="button"
+                      onClick={() => setOpenImage(img.attachment_url)}
+                      className="aspect-square overflow-hidden rounded-xl border border-border"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.attachment_url}
+                        alt="Bukti pengeluaran"
+                        className="h-full w-full object-cover transition-transform hover:scale-105"
+                      />
+                    </button>
+                  ),
+                )}
               </div>
             ) : (
-              <p className="mt-2 text-sm text-text-secondary">Tidak ada foto bukti pengeluaran.</p>
+              <p className="mt-2 text-sm text-text-secondary">Tidak ada file bukti pengeluaran.</p>
             )}
           </div>
         </div>

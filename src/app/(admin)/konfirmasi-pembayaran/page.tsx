@@ -41,6 +41,11 @@ function getVisiblePages(current: number, total: number): number[] {
   return range;
 }
 
+function isPdfUrl(url: string) {
+  const normalizedUrl = url.split("?")[0].toLowerCase();
+  return normalizedUrl.endsWith(".pdf");
+}
+
 export default function KonfirmasiPembayaranPage() {
   const [tab, setTab] = useState<ApprovalStatus>("pending");
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -197,20 +202,31 @@ export default function KonfirmasiPembayaranPage() {
                 </div>
               </div>
 
-              {(p.paymentProof || p.paymentProof) && (
-                <button
-                  type="button"
-                  onClick={() => setOpenImage(p.paymentProof ?? "")}
-                  className="mt-3 block w-40 overflow-hidden rounded-xl border border-border"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={p.paymentProof ?? p.paymentProof ?? ""}
-                    alt="Bukti pembayaran"
-                    className="h-40 w-40 object-cover"
-                  />
-                </button>
-              )}
+              {p.paymentProof &&
+                (isPdfUrl(p.paymentProof) ? (
+                  <a
+                    href={p.paymentProof}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 flex w-fit items-center gap-2 rounded-xl border border-border bg-surface-tertiary px-4 py-3 text-sm font-semibold text-primary hover:bg-border"
+                  >
+                    <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
+                    Lihat Bukti PDF
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setOpenImage(p.paymentProof ?? "")}
+                    className="mt-3 block w-40 overflow-hidden rounded-xl border border-border"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={p.paymentProof}
+                      alt="Bukti pembayaran"
+                      className="h-40 w-40 object-cover"
+                    />
+                  </button>
+                ))}
 
               {p.status === "pending" && (
                 <div className="mt-4 flex flex-col gap-3">

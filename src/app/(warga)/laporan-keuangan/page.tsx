@@ -10,6 +10,7 @@ import { Button } from "@/src/components/ui/Button";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
 import { cn, formatRupiah, formatDate, monthName } from "@/src/lib/utils";
+import { isPdfUrl } from "@/src/lib/file-utils";
 import Link from "next/link";
 import type { Expense, Income, PaginationMeta, Report } from "@/src/types";
 
@@ -251,28 +252,36 @@ export default function LaporanKeuanganWargaPage() {
           }
           renderItem={(r) => (
             <Card key={r.id} className="flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() =>
-                  r.report_proof_img && setOpenImage(r.report_proof_img)
-                }
-                className="shrink-0"
-              >
-                {r.report_proof_img ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={r.report_proof_img}
-                    alt={`Bukti laporan ${monthName(r.period_month)} ${r.period_year}`}
-                    className="h-32 w-full rounded-xl border border-border object-cover"
-                  />
+              {r.report_proof_img ? (
+                isPdfUrl(r.report_proof_img) ? (
+                  <a
+                    href={r.report_proof_img}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-32 w-full shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-surface-tertiary text-danger hover:bg-border"
+                  >
+                    <span className="material-symbols-outlined text-4xl">picture_as_pdf</span>
+                    <span className="mt-2 text-xs font-semibold">Buka Bukti PDF</span>
+                  </a>
                 ) : (
-                  <div className="flex h-32 w-full items-center justify-center rounded-xl border border-dashed border-border bg-surface-tertiary text-text-muted">
-                    <span className="material-symbols-outlined">
-                      image_not_supported
-                    </span>
-                  </div>
-                )}
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => setOpenImage(r.report_proof_img)}
+                    className="shrink-0"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={r.report_proof_img}
+                      alt={`Bukti laporan ${monthName(r.period_month)} ${r.period_year}`}
+                      className="h-32 w-full rounded-xl border border-border object-cover"
+                    />
+                  </button>
+                )
+              ) : (
+                <div className="flex h-32 w-full shrink-0 items-center justify-center rounded-xl border border-dashed border-border bg-surface-tertiary text-text-muted">
+                  <span className="material-symbols-outlined">image_not_supported</span>
+                </div>
+              )}
 
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-2">
@@ -357,25 +366,39 @@ export default function LaporanKeuanganWargaPage() {
 
                 {photos.length > 0 && (
                   <div className="mt-3 flex gap-2">
-                    {photos.map((img) => (
-                      <button
-                        key={img.id}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setOpenImage(img.attachment_url);
-                        }}
-                        className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={img.attachment_url}
-                          alt="Bukti pengeluaran"
-                          className="h-full w-full object-cover"
-                        />
-                      </button>
-                    ))}
+                    {photos.map((img) =>
+                      isPdfUrl(img.attachment_url) ? (
+                        <a
+                          key={img.id}
+                          href={img.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-surface-tertiary text-danger"
+                        >
+                          <span className="material-symbols-outlined text-2xl">picture_as_pdf</span>
+                          <span className="mt-1 text-[10px] font-semibold">Buka PDF</span>
+                        </a>
+                      ) : (
+                        <button
+                          key={img.id}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setOpenImage(img.attachment_url);
+                          }}
+                          className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={img.attachment_url}
+                            alt="Bukti pengeluaran"
+                            className="h-full w-full object-cover"
+                          />
+                        </button>
+                      ),
+                    )}
                   </div>
                 )}
 

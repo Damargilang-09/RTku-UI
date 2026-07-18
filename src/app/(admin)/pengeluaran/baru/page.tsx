@@ -7,6 +7,7 @@ import { expensesApi } from "@/src/lib/api/expenses";
 import { ApiError } from "@/src/lib/api/axios";
 import { Button } from "@/src/components/ui/Button";
 import { Input, Textarea } from "@/src/components/ui/Input";
+import { UPLOAD_FILE_ACCEPT, validateUploadFile } from "@/src/lib/file-utils";
 
 function generateExpenseCode() {
   const now = new Date();
@@ -33,8 +34,32 @@ export default function InputPengeluaranPage() {
   }
 
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(e.target.files ?? []).slice(0, 3);
+    const selected = Array.from(e.target.files ?? []);
+
+    if (selected.length > 3) {
+      setFiles([]);
+      setError("Maksimal 3 file bukti pengeluaran.");
+      e.target.value = "";
+      return;
+    }
+
+    let validationError = null;
+    for (const file of selected) {
+      validationError = validateUploadFile(file);
+      if (validationError) {
+        break;
+      }
+    }
+
+    if (validationError) {
+      setFiles([]);
+      setError(validationError);
+      e.target.value = "";
+      return;
+    }
+
     setFiles(selected);
+    setError(null);
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -53,7 +78,9 @@ export default function InputPengeluaranPage() {
       await expensesApi.create(formData);
       router.push("/pengeluaran");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal menyimpan pengeluaran");
+      setError(
+        err instanceof ApiError ? err.message : "Gagal menyimpan pengeluaran",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -65,30 +92,78 @@ export default function InputPengeluaranPage() {
         <Link href="/pengeluaran" className="text-text-secondary">
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
-        <h1 className="text-xl font-bold text-text-primary">Input Pengeluaran</h1>
+        <h1 className="text-xl font-bold text-text-primary">
+          Input Pengeluaran
+        </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-card border border-border bg-surface p-6">
-        {error && <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">{error}</div>}
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4 rounded-card border border-border bg-surface p-6"
+      >
+        {error && (
+          <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">
+            {error}
+          </div>
+        )}
 
-        <Input label="Kode Pengeluaran" value={form.expenseCode} onChange={(e) => update("expenseCode", e.target.value)} required />
-        <Input label="Judul Pengeluaran" placeholder="Contoh: Beli ATK Kantor" value={form.title} onChange={(e) => update("title", e.target.value)} required />
-        <Textarea label="Deskripsi" placeholder="Rincian penggunaan dana" value={form.description} onChange={(e) => update("description", e.target.value)} required rows={3} />
-        <Input label="Jumlah (Rp)" type="number" min={1} placeholder="0" value={form.amount} onChange={(e) => update("amount", e.target.value)} required />
-        <Input label="Tanggal Pengeluaran" type="date" value={form.expenseDate} onChange={(e) => update("expenseDate", e.target.value)} required />
+        <Input
+          label="Kode Pengeluaran"
+          value={form.expenseCode}
+          onChange={(e) => update("expenseCode", e.target.value)}
+          required
+        />
+        <Input
+          label="Judul Pengeluaran"
+          placeholder="Contoh: Beli ATK Kantor"
+          value={form.title}
+          onChange={(e) => update("title", e.target.value)}
+          required
+        />
+        <Textarea
+          label="Deskripsi"
+          placeholder="Rincian penggunaan dana"
+          value={form.description}
+          onChange={(e) => update("description", e.target.value)}
+          required
+          rows={3}
+        />
+        <Input
+          label="Jumlah (Rp)"
+          type="number"
+          min={1}
+          placeholder="0"
+          value={form.amount}
+          onChange={(e) => update("amount", e.target.value)}
+          required
+        />
+        <Input
+          label="Tanggal Pengeluaran"
+          type="date"
+          value={form.expenseDate}
+          onChange={(e) => update("expenseDate", e.target.value)}
+          required
+        />
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-text-primary">Bukti Pengeluaran (maks. 3 foto)</label>
+          <label className="text-sm font-medium text-text-primary">
+            Bukti Pengeluaran — Foto/PDF (maks. 3 file)
+          </label>
           <input
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept={UPLOAD_FILE_ACCEPT}
             multiple
             onChange={handleFiles}
             className="rounded-xl border border-border bg-surface px-4 py-3 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-primary-light file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary"
           />
           {files.length > 0 && (
-            <p className="text-xs text-text-secondary">{files.length} foto dipilih</p>
+            <p className="text-xs text-text-secondary">
+              {files.length} file dipilih
+            </p>
           )}
+          <p className="text-xs text-text-secondary">
+            JPG, JPEG, PNG, atau PDF · Maks. 5 MB per file
+          </p>
         </div>
 
         <Button type="submit" fullWidth loading={submitting} className="mt-2">
