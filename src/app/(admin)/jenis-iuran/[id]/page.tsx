@@ -136,7 +136,11 @@ export default function DetailJenisIuranPage() {
                 Penetapan Jatuh Tempo
               </dt>
               <dd className="mt-1 text-sm text-text-primary">
-                Ditentukan oleh Bendahara saat melakukan generate tagihan warga.
+                {feeType.billingPeriod === "monthly"
+                  ? feeType.dueDay
+                    ? `Setiap tanggal ${feeType.dueDay}`
+                    : "Belum ditentukan"
+                  : "Ditentukan saat generate tagihan warga"}
               </dd>
             </div>
             <div className="p-5 sm:col-span-2">

@@ -29,6 +29,7 @@ export interface FeeType {
   description: string | null;
   amount: number;
   billingPeriod: BillingPeriod;
+  dueDay: number | null;
 }
 
 export interface Bill {
@@ -83,7 +84,7 @@ export interface Expense {
   approvedAt: string | null;
   requestedBy?: string;
   approvedBy?: string | null;
-  expenses_images?:{
+  expenses_images?: {
     id: string;
     attachment_url: string;
   }[];

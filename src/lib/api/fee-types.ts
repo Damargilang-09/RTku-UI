@@ -6,6 +6,7 @@ export interface FeeTypePayload {
   description?: string;
   amount: number;
   billingPeriod: BillingPeriod;
+  dueDay?: number;
 }
 
 export const feeTypesApi = {

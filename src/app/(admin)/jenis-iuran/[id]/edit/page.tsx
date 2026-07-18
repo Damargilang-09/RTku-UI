@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { feeTypesApi, type FeeTypePayload } from "@/src/lib/api/fee-types";
+import { feeTypesApi } from "@/src/lib/api/fee-types";
 import { ApiError } from "@/src/lib/api/axios";
 import { Button } from "@/src/components/ui/Button";
 import { Input, Textarea } from "@/src/components/ui/Input";
@@ -15,6 +15,7 @@ const EMPTY_FORM = {
   description: "",
   amount: "",
   billingPeriod: "monthly" as BillingPeriod,
+  dueDay: "",
 };
 
 export default function EditJenisIuranPage() {
@@ -36,6 +37,7 @@ export default function EditJenisIuranPage() {
         description: feeType.description ?? "",
         amount: String(feeType.amount),
         billingPeriod: feeType.billingPeriod,
+        dueDay: feeType.dueDay === null ? "" : String(feeType.dueDay),
       });
     } catch (err) {
       setError(
@@ -70,23 +72,33 @@ export default function EditJenisIuranPage() {
       return;
     }
 
-    const payload: Partial<FeeTypePayload> = {
+    if (form.billingPeriod === "monthly") {
+      const dueDay = Number(form.dueDay);
+
+      if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
+        setError("Tanggal jatuh tempo harus diisi dari tanggal 1 sampai 31");
+        return;
+      }
+    }
+
+    const payload = {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       amount: Number(form.amount),
       billingPeriod: form.billingPeriod,
+      ...(form.billingPeriod === "monthly"
+        ? { dueDay: Number(form.dueDay) }
+        : {}),
     };
 
     setSubmitting(true);
     try {
-      await feeTypesApi.update(params.id, payload);
-      router.push(`/jenis-iuran/${params.id}`);
+      const response = await feeTypesApi.update(params.id, payload);
+      router.push(`/jenis-iuran/${response.data.id}`);
       router.refresh();
     } catch (err) {
       setError(
-        err instanceof ApiError
-          ? err.message
-          : "Gagal memperbarui jenis iuran",
+        err instanceof ApiError ? err.message : "Gagal memperbarui jenis iuran",
       );
     } finally {
       setSubmitting(false);
@@ -163,13 +175,27 @@ export default function EditJenisIuranPage() {
           </select>
         </label>
 
+        {form.billingPeriod === "monthly" && (
+          <Input
+            label="Tanggal Jatuh Tempo"
+            type="number"
+            min="1"
+            max="31"
+            placeholder="Contoh: 10"
+            value={form.dueDay}
+            onChange={(event) => updateForm("dueDay", event.target.value)}
+            required
+          />
+        )}
+
         <div className="flex items-start gap-3 rounded-xl bg-info-bg px-4 py-3 text-sm text-info">
           <span className="material-symbols-outlined mt-0.5 text-base">
             info
           </span>
           <p>
-            Tanggal jatuh tempo tidak disimpan pada jenis iuran. Tanggalnya
-            ditentukan saat generate tagihan warga.
+            Untuk iuran bulanan, tanggal jatuh tempo disimpan pada jenis iuran.
+            Untuk iuran sekali bayar, tanggal jatuh tempo dipilih saat generate
+            tagihan warga.
           </p>
         </div>
 
