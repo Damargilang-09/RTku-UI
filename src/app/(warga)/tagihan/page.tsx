@@ -218,7 +218,7 @@ export default function TagihanPage() {
         </div>
       </Card>
 
-      <div className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="-mx-5 overflow-x-auto px-5 scrollbar-none [&::-webkit-scrollbar]:hidden">
         <div className="flex w-max gap-2">
           {FILTERS.map((item) => (
             <button
@@ -271,8 +271,7 @@ export default function TagihanPage() {
 
           {paginatedBills.map((bill) => {
             const dueInformation = getDueInformation(bill);
-            const canPay =
-              bill.status === "unpaid" || bill.status === "overdue";
+            const canPay = bill.status === "unpaid";
 
             return (
               <Link
