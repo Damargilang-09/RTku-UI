@@ -210,9 +210,9 @@ export default function PengeluaranPage() {
                 </div>
               </div>
 
-              {exp.expenses_images && exp.expenses_images.length > 0 && (
+              {exp.expenses_image && exp.expenses_image.length > 0 && (
                 <div className="mt-3 flex gap-2 overflow-x-auto">
-                  {exp.expenses_images.map((img) => (
+                  {exp.expenses_image.map((img) => (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       key={img.id}

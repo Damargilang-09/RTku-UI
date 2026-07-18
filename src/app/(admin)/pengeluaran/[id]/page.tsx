@@ -24,7 +24,7 @@ export default function DetailPengeluaranPage() {
     try {
       const response = await expensesApi.getDetail(params.id);
   setExpense(response.data);     
-  setImages(response.data.expenses_images ?? []); 
+  setImages(response.data.expenses_image ?? []); 
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Gagal mengambil detail pengeluaran");
     } finally {
@@ -91,7 +91,7 @@ export default function DetailPengeluaranPage() {
 
           <div className="border-t border-border p-5">
             <p className="text-xs uppercase text-text-muted">Bukti Pengeluaran</p>
-            {expense.expenses_images && expense.expenses_images.length > 0 ? (
+            {expense.expenses_image && expense.expenses_image.length > 0 ? (
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {images.map((img) => (
                   <button
