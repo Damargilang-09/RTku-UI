@@ -3,7 +3,8 @@ import type { ApiResponse, DashboardSummary, Report } from "@/src/types";
 
 export const reportsApi = {
   async dashboard() {
-    const res = await api.get<ApiResponse<DashboardSummary>>("/report/dashboard");
+    const res =
+      await api.get<ApiResponse<DashboardSummary>>("/report/dashboard");
     return res.data;
   },
 
@@ -22,7 +23,18 @@ export const reportsApi = {
     return res.data;
   },
 
-  async approve(id: string, payload: { status: "closed" | "failed"; rejected_reason?: string }) {
+  async resubmit(id: string, formData: FormData) {
+    const res = await api.patch<ApiResponse<Report>>(
+      `/report/resubmission/${id}`,
+      formData,
+    );
+    return res.data;
+  },
+
+  async approve(
+    id: string,
+    payload: { status: "closed" | "failed"; rejected_reason?: string },
+  ) {
     const res = await api.patch<ApiResponse<Report>>(`/report/${id}`, payload);
     return res.data;
   },

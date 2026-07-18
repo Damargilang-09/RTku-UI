@@ -8,6 +8,7 @@ import { useAuthStore } from "@/src/lib/auth-store";
 import { ApiError } from "@/src/lib/api/axios";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
+import { detectDeviceType } from "@/src/lib/devices";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,11 +26,20 @@ export default function LoginPage() {
       const res = await authApi.login({ email, password });
       setUser(res.data);
 
-      if (res.data.role === "warga") {
-        router.replace("/beranda");
-        return;
-      }
+      const deviceType = detectDeviceType();
+      // Cookie ini murni penanda device untuk dibaca middleware,
+      // terpisah dari cookie "token" yang di-set backend.
+      document.cookie = `device_type=${deviceType}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Strict`;
 
+      const isStaff =
+        res.data.role === "bendahara" || res.data.role === "ketuaRT";
+
+      if (res.data.role === "warga" || (isStaff && deviceType === "mobile")) {
+        router.push("/beranda");
+      } else {
+        router.push("/dashboard");
+      }
+      
       if (res.data.role === "superAdmin") {
         router.replace("/kelola-ketua-rt");
         return;

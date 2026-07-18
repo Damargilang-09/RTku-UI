@@ -84,7 +84,7 @@ export interface Expense {
   approvedAt: string | null;
   requestedBy?: string;
   approvedBy?: string | null;
-  expenses_images?: {
+  expenses_image?: {
     id: string;
     attachment_url: string;
   }[];

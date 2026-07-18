@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/beranda", icon: "home", label: "Beranda" },
   { href: "/tagihan", icon: "payments", label: "Tagihan" },
   { href: "/transaksi", icon: "history", label: "Riwayat" },
+  { href: "/laporan-keuangan", icon: "summarize", label: "Laporan" },
   { href: "/profil", icon: "person", label: "Profil" },
 ];
 
@@ -19,7 +20,7 @@ export function WargaShell({ children }: { children: React.ReactNode }) {
       <main className="flex-1 pb-24">{children}</main>
 
       <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-border bg-surface/95 backdrop-blur">
-        <div className="flex items-center justify-around px-2 py-2">
+        <div className="flex items-center justify-around px-1 py-2">
           {NAV_ITEMS.map((item) => {
             const active = pathname?.startsWith(item.href);
             return (
@@ -27,12 +28,12 @@ export function WargaShell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 rounded-xl px-4 py-1.5 transition-colors",
+                  "flex flex-col items-center gap-0.5 rounded-xl px-2.5 py-1.5 transition-colors",
                   active ? "text-primary" : "text-text-muted hover:text-primary",
                 )}
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
-                <span className="text-xs font-medium">{item.label}</span>
+                <span className="text-[11px] font-medium">{item.label}</span>
               </Link>
             );
           })}
