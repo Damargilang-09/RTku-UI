@@ -31,4 +31,11 @@ export const superAdminApi = {
     const res = await api.patch<ApiResponse<User>>(`/super-admin/user/${id}`);
     return res.data;
   },
+
+  async removeKetuaRT(id: string) {
+    const res = await api.patch<ApiResponse<User>>(
+      `/super-admin/user/${id}/remove`,
+    );
+    return res.data;
+  },
 };

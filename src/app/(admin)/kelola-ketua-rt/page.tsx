@@ -17,7 +17,10 @@ const INITIAL_META: PaginationMeta = {
   totalPage: 0,
 };
 
-const ROLE_OPTIONS: Array<{ value: "" | Exclude<UserRole, "superAdmin">; label: string }> = [
+const ROLE_OPTIONS: Array<{
+  value: "" | Exclude<UserRole, "superAdmin">;
+  label: string;
+}> = [
   { value: "", label: "Semua peran" },
   { value: "warga", label: "Warga" },
   { value: "bendahara", label: "Bendahara" },
@@ -60,7 +63,9 @@ export default function KelolaKetuaRTPage() {
       setMeta(response.data.meta);
     } catch (err) {
       setUsers([]);
-      setError(err instanceof ApiError ? err.message : "Gagal mengambil daftar user");
+      setError(
+        err instanceof ApiError ? err.message : "Gagal mengambil daftar user",
+      );
     } finally {
       setLoading(false);
     }
@@ -109,13 +114,44 @@ export default function KelolaKetuaRTPage() {
       setSuccess(`${user.name} berhasil ditetapkan sebagai Ketua RT.`);
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal menetapkan Ketua RT");
+      setError(
+        err instanceof ApiError ? err.message : "Gagal menetapkan Ketua RT",
+      );
     } finally {
       setBusyId(null);
     }
   }
 
-  const pageNumbers = Array.from({ length: meta.totalPage }, (_, index) => index + 1).filter(
+  async function removeKetuaRT(user: User) {
+    const confirmed = window.confirm(
+      `Cabut ${user.name} dari Ketua RT? Akun akan tetap aktif sebagai warga dan sistem sementara tidak memiliki Ketua RT.`,
+    );
+
+    if (!confirmed) return;
+
+    setBusyId(user.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await superAdminApi.removeKetuaRT(user.id);
+      setSuccess(
+        `${user.name} berhasil dicabut dari Ketua RT dan kembali menjadi warga.`,
+      );
+      await load();
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "Gagal mencabut Ketua RT",
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const pageNumbers = Array.from(
+    { length: meta.totalPage },
+    (_, index) => index + 1,
+  ).filter(
     (pageNumber) =>
       pageNumber === 1 ||
       pageNumber === meta.totalPage ||
@@ -125,9 +161,11 @@ export default function KelolaKetuaRTPage() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Kelola Ketua RT</h1>
+        <h1 className="text-2xl font-bold text-text-primary">
+          Kelola Ketua RT
+        </h1>
         <p className="text-sm text-text-secondary">
-          Pilih user yang akan ditetapkan sebagai Ketua RT aktif.
+          Tetapkan Ketua RT baru atau cabut Ketua RT aktif tanpa pengganti.
         </p>
       </div>
 
@@ -140,7 +178,9 @@ export default function KelolaKetuaRTPage() {
 
         <select
           value={status}
-          onChange={(event) => changeStatus(event.target.value as "" | UserStatus)}
+          onChange={(event) =>
+            changeStatus(event.target.value as "" | UserStatus)
+          }
           className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none transition-shadow focus:border-primary focus:ring-4 focus:ring-primary/10"
         >
           {STATUS_OPTIONS.map((option) => (
@@ -153,7 +193,9 @@ export default function KelolaKetuaRTPage() {
         <select
           value={role}
           onChange={(event) =>
-            changeRole(event.target.value as "" | Exclude<UserRole, "superAdmin">)
+            changeRole(
+              event.target.value as "" | Exclude<UserRole, "superAdmin">,
+            )
           }
           className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none transition-shadow focus:border-primary focus:ring-4 focus:ring-primary/10"
         >
@@ -165,8 +207,16 @@ export default function KelolaKetuaRTPage() {
         </select>
       </div>
 
-      {error && <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">{error}</div>}
-      {success && <div className="rounded-xl bg-success-bg px-4 py-3 text-sm text-success">{success}</div>}
+      {error && (
+        <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="rounded-xl bg-success-bg px-4 py-3 text-sm text-success">
+          {success}
+        </div>
+      )}
 
       {loading ? (
         <Spinner />
@@ -176,14 +226,16 @@ export default function KelolaKetuaRTPage() {
         <>
           <div className="overflow-hidden rounded-card border border-border bg-surface">
             {users.map((user, index) => {
-              const isActiveKetuaRT = user.role === "ketuaRT" && user.status === "active";
+              const isActiveKetuaRT =
+                user.role === "ketuaRT" && user.status === "active";
 
               return (
                 <div
                   key={user.id}
                   className={cn(
                     "flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between",
-                    index !== users.length - 1 && "border-b border-surface-tertiary",
+                    index !== users.length - 1 &&
+                      "border-b border-surface-tertiary",
                   )}
                 >
                   <div className="flex min-w-0 items-center gap-3">
@@ -191,12 +243,16 @@ export default function KelolaKetuaRTPage() {
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-text-primary">{user.name}</p>
+                      <p className="truncate text-sm font-semibold text-text-primary">
+                        {user.name}
+                      </p>
                       <p className="truncate text-xs text-text-secondary">
                         {user.email} &middot; Rumah {user.houseNumber ?? "-"}
                       </p>
                       {user.address && (
-                        <p className="mt-0.5 truncate text-xs text-text-muted">{user.address}</p>
+                        <p className="mt-0.5 truncate text-xs text-text-muted">
+                          {user.address}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -217,15 +273,25 @@ export default function KelolaKetuaRTPage() {
                       {ROLE_LABEL[user.role]}
                     </span>
 
-                    <Button
-                      variant={isActiveKetuaRT ? "secondary" : "primary"}
-                      className="px-3 py-1.5 text-xs"
-                      loading={busyId === user.id}
-                      disabled={isActiveKetuaRT}
-                      onClick={() => setAsKetuaRT(user)}
-                    >
-                      {isActiveKetuaRT ? "Ketua RT Aktif" : "Jadikan Ketua RT"}
-                    </Button>
+                    {isActiveKetuaRT ? (
+                      <Button
+                        variant="danger"
+                        className="px-3 py-1.5 text-xs"
+                        loading={busyId === user.id}
+                        onClick={() => removeKetuaRT(user)}
+                      >
+                        Cabut Ketua RT
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        className="px-3 py-1.5 text-xs"
+                        loading={busyId === user.id}
+                        onClick={() => setAsKetuaRT(user)}
+                      >
+                        Jadikan Ketua RT
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
@@ -245,19 +311,28 @@ export default function KelolaKetuaRTPage() {
                   disabled={meta.page <= 1}
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                 >
-                  <span className="material-symbols-outlined text-base">chevron_left</span>
+                  <span className="material-symbols-outlined text-base">
+                    chevron_left
+                  </span>
                   Sebelumnya
                 </Button>
 
                 {pageNumbers.map((pageNumber, index) => {
                   const previousPageNumber = pageNumbers[index - 1];
-                  const showEllipsis = previousPageNumber && pageNumber - previousPageNumber > 1;
+                  const showEllipsis =
+                    previousPageNumber && pageNumber - previousPageNumber > 1;
 
                   return (
                     <div key={pageNumber} className="flex items-center gap-2">
-                      {showEllipsis && <span className="px-1 text-sm text-text-muted">...</span>}
+                      {showEllipsis && (
+                        <span className="px-1 text-sm text-text-muted">
+                          ...
+                        </span>
+                      )}
                       <Button
-                        variant={pageNumber === meta.page ? "primary" : "secondary"}
+                        variant={
+                          pageNumber === meta.page ? "primary" : "secondary"
+                        }
                         className="h-9 min-w-9 px-3 py-0 text-xs"
                         onClick={() => setPage(pageNumber)}
                       >
@@ -271,10 +346,14 @@ export default function KelolaKetuaRTPage() {
                   variant="secondary"
                   className="h-9 px-3 py-0 text-xs"
                   disabled={meta.page >= meta.totalPage}
-                  onClick={() => setPage((current) => Math.min(meta.totalPage, current + 1))}
+                  onClick={() =>
+                    setPage((current) => Math.min(meta.totalPage, current + 1))
+                  }
                 >
                   Berikutnya
-                  <span className="material-symbols-outlined text-base">chevron_right</span>
+                  <span className="material-symbols-outlined text-base">
+                    chevron_right
+                  </span>
                 </Button>
               </div>
             )}
