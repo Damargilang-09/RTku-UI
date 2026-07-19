@@ -1,26 +1,39 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { billsApi } from "@/src/lib/api/bills";
+import type { MyBillSummary } from "@/src/lib/api/bills";
 import { Card } from "@/src/components/ui/Card";
 import { StatusChip } from "@/src/components/ui/StatusChip";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
 import { cn, formatDate, formatRupiah, monthName } from "@/src/lib/utils";
-import type { Bill, BillStatus } from "@/src/types";
+import type { Bill, PaginationMeta } from "@/src/types";
 
-type BillFilter = "all" | "active" | "pending" | "paid";
+type BillFilter = "all" | "active" | "pending";
 
 const FILTERS: Array<{ value: BillFilter; label: string }> = [
   { value: "all", label: "Semua" },
   { value: "active", label: "Perlu Dibayar" },
   { value: "pending", label: "Diproses" },
-  { value: "paid", label: "Lunas" },
 ];
 
 const PAGE_SIZE = 10;
+
+const EMPTY_META: PaginationMeta = {
+  page: 1,
+  limit: PAGE_SIZE,
+  totalData: 0,
+  totalPage: 1,
+};
+
+const EMPTY_SUMMARY: MyBillSummary = {
+  totalDue: 0,
+  activeCount: 0,
+  pendingCount: 0,
+};
 
 function getVisiblePages(current: number, total: number): number[] {
   const delta = 2;
@@ -104,63 +117,48 @@ function getDueInformation(bill: Bill) {
   };
 }
 
-function matchesFilter(status: BillStatus, filter: BillFilter) {
-  if (filter === "all") return true;
-  if (filter === "active") return status === "unpaid" || status === "overdue";
-  if (filter === "pending") return status === "pending";
-  return status === "paid";
-}
-
 export default function TagihanPage() {
   const searchParams = useSearchParams();
   const [bills, setBills] = useState<Bill[]>([]);
   const [filter, setFilter] = useState<BillFilter>("all");
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState<PaginationMeta>(EMPTY_META);
+  const [summary, setSummary] = useState<MyBillSummary>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await billsApi.getMyBills({
+        page,
+        limit: PAGE_SIZE,
+        status: filter,
+      });
+
+      setBills(response.data ?? []);
+      setMeta(response.meta ?? { ...EMPTY_META, page });
+      setSummary(response.summary ?? EMPTY_SUMMARY);
+    } catch {
+      setError("Tagihan belum berhasil dimuat. Silakan coba lagi.");
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, page]);
 
   useEffect(() => {
+    load();
+  }, [load]);
+
+  function changeFilter(newFilter: BillFilter) {
+    setFilter(newFilter);
     setPage(1);
-  }, [filter]);
+  }
 
-  useEffect(() => {
-    billsApi
-      .getMyBills()
-      .then((res) => setBills(res.data))
-      .catch(() =>
-        setError("Tagihan belum berhasil dimuat. Silakan coba lagi."),
-      )
-      .finally(() => setLoading(false));
-  }, []);
-
-  const summary = useMemo(() => {
-    const activeBills = bills.filter(
-      (bill) => bill.status === "unpaid" || bill.status === "overdue",
-    );
-
-    return {
-      totalDue: activeBills.reduce(
-        (total, bill) => total + Number(bill.amount),
-        0,
-      ),
-      activeCount: activeBills.length,
-      pendingCount: bills.filter((bill) => bill.status === "pending").length,
-    };
-  }, [bills]);
-
-  const filteredBills = useMemo(
-    () => bills.filter((bill) => matchesFilter(bill.status, filter)),
-    [bills, filter],
-  );
-
-  const totalPage = Math.max(1, Math.ceil(filteredBills.length / PAGE_SIZE));
-  const paginatedBills = useMemo(
-    () => filteredBills.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filteredBills, page],
-  );
+  const totalPage = meta.totalPage;
   const visiblePages = getVisiblePages(page, totalPage);
-
-  if (loading) return <Spinner className="min-h-[60vh]" />;
 
   return (
     <div className="flex flex-col gap-5 px-5 pt-6">
@@ -224,7 +222,7 @@ export default function TagihanPage() {
             <button
               key={item.value}
               type="button"
-              onClick={() => setFilter(item.value)}
+              onClick={() => changeFilter(item.value)}
               className={cn(
                 "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
                 filter === item.value
@@ -242,9 +240,11 @@ export default function TagihanPage() {
         <div className="rounded-2xl border border-danger/20 bg-danger-bg px-4 py-4 text-sm text-danger">
           {error}
         </div>
-      ) : filteredBills.length === 0 ? (
+      ) : loading ? (
+        <Spinner className="min-h-[30vh]" />
+      ) : bills.length === 0 ? (
         <EmptyState
-          icon={filter === "paid" ? "task_alt" : "receipt_long"}
+          icon="receipt_long"
           title={
             filter === "all"
               ? "Belum ada tagihan"
@@ -265,11 +265,11 @@ export default function TagihanPage() {
                 : FILTERS.find((item) => item.value === filter)?.label}
             </h2>
             <span className="text-xs font-medium text-text-muted">
-              {filteredBills.length} tagihan
+              {meta.totalData} tagihan
             </span>
           </div>
 
-          {paginatedBills.map((bill) => {
+          {bills.map((bill) => {
             const dueInformation = getDueInformation(bill);
             const canPay = bill.status === "unpaid";
 

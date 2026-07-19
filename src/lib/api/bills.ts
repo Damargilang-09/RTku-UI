@@ -9,6 +9,24 @@ export interface BillListParams {
   batchId?: string;
   periodMonth?: number;
   periodYear?: number;
+  search?: string;
+}
+
+export interface MyBillListParams {
+  page?: number;
+  limit?: number;
+  status?: "all" | "active" | "pending";
+}
+
+export interface MyBillSummary {
+  totalDue: number;
+  activeCount: number;
+  pendingCount: number;
+}
+
+export interface MyBillListResponse extends ApiResponse<Bill[]> {
+  meta: PaginationMeta;
+  summary: MyBillSummary;
 }
 
 export interface GenerateBillsPayload {
@@ -39,8 +57,8 @@ export interface CancelBatchResult {
 }
 
 export const billsApi = {
-  async getMyBills(params?: { page?: number; limit?: number }) {
-    const res = await api.get<ApiResponse<Bill[]>>("/my-bills", { params });
+  async getMyBills(params: MyBillListParams = {}) {
+    const res = await api.get<MyBillListResponse>("/my-bills", { params });
     return res.data;
   },
 
@@ -50,7 +68,10 @@ export const billsApi = {
   },
 
   async getAllBills(params: BillListParams = {}) {
-    const res = await api.get<ApiResponse<Bill[]> & { meta: PaginationMeta }>("/bills", { params });
+    const res = await api.get<ApiResponse<Bill[]> & { meta: PaginationMeta }>(
+      "/bills",
+      { params },
+    );
     return res.data;
   },
 
@@ -60,12 +81,18 @@ export const billsApi = {
   },
 
   async generateBills(payload: GenerateBillsPayload) {
-    const res = await api.post<ApiResponse<GenerateBillsResult>>("/bills/generate", payload);
+    const res = await api.post<ApiResponse<GenerateBillsResult>>(
+      "/bills/generate",
+      payload,
+    );
     return res.data;
   },
 
   async cancelBillBatch(batchId: string) {
-    const res = await api.patch<ApiResponse<CancelBatchResult>>("/bills/cancel-batch", { batchId });
+    const res = await api.patch<ApiResponse<CancelBatchResult>>(
+      "/bills/cancel-batch",
+      { batchId },
+    );
     return res.data;
   },
 };

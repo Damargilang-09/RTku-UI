@@ -33,9 +33,8 @@ export default function TagihanWargaPage() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<"" | BillStatus>("");
   const [feeTypeId, setFeeTypeId] = useState("");
-  const [batchId, setBatchId] = useState("");
-  const [periodMonth, setPeriodMonth] = useState("");
-  const [periodYear, setPeriodYear] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,9 +47,7 @@ export default function TagihanWargaPage() {
         limit: PAGE_SIZE,
         status: status || undefined,
         feeTypeId: feeTypeId || undefined,
-        batchId: batchId.trim() || undefined,
-        periodMonth: periodMonth ? Number(periodMonth) : undefined,
-        periodYear: periodYear ? Number(periodYear) : undefined,
+        search: search || undefined,
       });
       setBills(response.data);
       setMeta(
@@ -70,7 +67,7 @@ export default function TagihanWargaPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, status, feeTypeId, batchId, periodMonth, periodYear]);
+  }, [page, status, feeTypeId, search]);
 
   useEffect(() => {
     feeTypesApi
@@ -83,12 +80,16 @@ export default function TagihanWargaPage() {
     load();
   }, [load]);
 
+  function applySearch() {
+    setSearch(searchInput.trim());
+    setPage(1);
+  }
+
   function resetFilters() {
     setStatus("");
     setFeeTypeId("");
-    setBatchId("");
-    setPeriodMonth("");
-    setPeriodYear("");
+    setSearchInput("");
+    setSearch("");
     setPage(1);
   }
 
@@ -121,13 +122,37 @@ export default function TagihanWargaPage() {
         </Link>
       </div>
 
-      <div className="grid gap-3 rounded-card border border-border bg-surface p-4 md:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-3 rounded-card border border-border bg-surface p-4 md:grid-cols-2 xl:grid-cols-4">
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary md:col-span-2">
+          Cari Tagihan
+          <div className="flex gap-2">
+            <input
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") applySearch();
+              }}
+              placeholder="Nama warga, nomor rumah, kode tagihan, atau batch ID"
+              className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-primary"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              className="px-3"
+              onClick={applySearch}
+            >
+              <span className="material-symbols-outlined text-base">search</span>
+              Cari
+            </Button>
+          </div>
+        </label>
+
         <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary">
           Status
           <select
             value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as "" | BillStatus);
+            onChange={(event) => {
+              setStatus(event.target.value as "" | BillStatus);
               setPage(1);
             }}
             className="rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-primary"
@@ -139,12 +164,13 @@ export default function TagihanWargaPage() {
             ))}
           </select>
         </label>
+
         <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary">
           Jenis Iuran
           <select
             value={feeTypeId}
-            onChange={(e) => {
-              setFeeTypeId(e.target.value);
+            onChange={(event) => {
+              setFeeTypeId(event.target.value);
               setPage(1);
             }}
             className="rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-primary"
@@ -157,71 +183,8 @@ export default function TagihanWargaPage() {
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary">
-          Bulan
-          <select
-            value={periodMonth}
-            onChange={(e) => {
-              setPeriodMonth(e.target.value);
-              setPage(1);
-            }}
-            className="rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-primary"
-          >
-            <option value="">Semua bulan</option>
-            {Array.from({ length: 12 }, (_, index) => index + 1).map(
-              (month) => (
-                <option key={month} value={month}>
-                  {monthName(month)}
-                </option>
-              ),
-            )}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary">
-          Tahun
-          <input
-            type="number"
-            min="2000"
-            value={periodYear}
-            onChange={(e) => {
-              setPeriodYear(e.target.value);
-              setPage(1);
-            }}
-            placeholder="2026"
-            className="rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-primary"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary xl:col-span-2">
-          Batch ID
-          <div className="flex gap-2">
-            <input
-              value={batchId}
-              onChange={(e) => setBatchId(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setPage(1);
-                  load();
-                }
-              }}
-              placeholder="Cari berdasarkan batch ID"
-              className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-primary"
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              className="px-3"
-              onClick={() => {
-                setPage(1);
-                load();
-              }}
-            >
-              <span className="material-symbols-outlined text-base">
-                search
-              </span>
-            </Button>
-          </div>
-        </label>
-        <div className="md:col-span-2 xl:col-span-6 flex justify-end">
+
+        <div className="flex items-end justify-end md:col-span-2 xl:col-span-4">
           <Button
             type="button"
             variant="ghost"
@@ -250,14 +213,14 @@ export default function TagihanWargaPage() {
             Belum ada tagihan
           </p>
           <p className="text-sm text-text-secondary">
-            Ubah filter atau generate tagihan baru.
+            Ubah pencarian atau filter yang digunakan.
           </p>
         </div>
       ) : (
         <>
           <div className="overflow-hidden rounded-card border border-border bg-surface">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[980px] text-left text-sm">
+              <table className="w-full min-w-245 text-left text-sm">
                 <thead className="bg-surface-tertiary text-xs uppercase tracking-wide text-text-muted">
                   <tr>
                     <th className="px-4 py-3">Warga</th>
