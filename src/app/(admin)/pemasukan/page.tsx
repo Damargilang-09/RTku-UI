@@ -10,9 +10,13 @@ import { Button } from "@/src/components/ui/Button";
 import { Input, Textarea } from "@/src/components/ui/Input";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
-import { Pagination } from "@/src/components/ui/Pagination";
 import { cn, formatRupiah, formatDate } from "@/src/lib/utils";
 import type { ApprovalStatus, Income, PaginationMeta } from "@/src/types";
+import {
+  incomeFormSchema,
+  IncomeFormValues,
+  rejectReasonSchema,
+} from "@/src/validations";
 
 const PAGE_SIZE = 10;
 
@@ -85,6 +89,11 @@ export default function PemasukanPage() {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof IncomeFormValues, string>>
+  >({});
+
+  const [rejectError, setRejectError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(() => {
@@ -114,22 +123,53 @@ export default function PemasukanPage() {
   }
 
   function update(key: keyof typeof form, value: string) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [key]: undefined,
+    }));
   }
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
+
     setError(null);
+    setErrors({});
+
+    const result = incomeFormSchema.safeParse(form);
+
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+
+      setErrors({
+        income_code: fieldErrors.income_code?.[0],
+        title: fieldErrors.title?.[0],
+        description: fieldErrors.description?.[0],
+        amount: fieldErrors.amount?.[0],
+        income_date: fieldErrors.income_date?.[0],
+      });
+
+      setError(result.error.issues[0].message);
+      return;
+    }
+
     setSubmitting(true);
+
     try {
       await incomeApi.create({
-        income_code: form.income_code,
-        title: form.title,
-        description: form.description,
-        amount: Number(form.amount),
-        income_date: form.income_date,
+        income_code: result.data.income_code,
+        title: result.data.title,
+        description: result.data.description,
+        amount: result.data.amount,
+        income_date: result.data.income_date,
       });
+
       setShowForm(false);
+
       setForm({
         income_code: generateIncomeCode(),
         title: "",
@@ -137,6 +177,7 @@ export default function PemasukanPage() {
         amount: "",
         income_date: new Date().toISOString().slice(0, 10),
       });
+
       load();
     } catch (err) {
       setError(
@@ -162,16 +203,25 @@ export default function PemasukanPage() {
   }
 
   async function handleReject(id: string) {
-    if (!reason.trim()) {
-      setError("Alasan penolakan wajib diisi");
+    setRejectError(null);
+
+    const result = rejectReasonSchema.safeParse({
+      reason,
+    });
+
+    if (!result.success) {
+      setRejectError(result.error.issues[0].message);
       return;
     }
+
     setBusyId(id);
+
     try {
       await incomeApi.approve(id, {
         status: "rejected",
-        rejected_reason: reason.trim(),
+        rejected_reason: result.data.reason,
       });
+
       setRejectingId(null);
       setReason("");
       load();
@@ -215,19 +265,24 @@ export default function PemasukanPage() {
             label="Kode Pemasukan"
             value={form.income_code}
             onChange={(e) => update("income_code", e.target.value)}
+            error={errors.income_code}
             required
           />
+
           <Input
             label="Judul"
             placeholder="Contoh: Donasi Fogging"
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
+            error={errors.title}
             required
           />
+
           <Textarea
             label="Deskripsi"
             value={form.description}
             onChange={(e) => update("description", e.target.value)}
+            error={errors.description}
             required
             rows={2}
           />
@@ -237,6 +292,7 @@ export default function PemasukanPage() {
             min={1}
             value={form.amount}
             onChange={(e) => update("amount", e.target.value)}
+            error={errors.amount}
             required
           />
           <Input
@@ -244,6 +300,7 @@ export default function PemasukanPage() {
             type="date"
             value={form.income_date}
             onChange={(e) => update("income_date", e.target.value)}
+            error={errors.income_date}
             required
           />
           <div className="flex gap-2">
@@ -322,12 +379,20 @@ export default function PemasukanPage() {
                 <div className="mt-4 flex flex-col gap-3">
                   {rejectingId === inc.id ? (
                     <>
+                      {rejectError && (
+                        <p className="text-sm text-danger">{rejectError}</p>
+                      )}
+
                       <Textarea
                         placeholder="Alasan penolakan"
                         value={reason}
-                        onChange={(e) => setReason(e.target.value)}
+                        onChange={(e) => {
+                          setReason(e.target.value);
+                          setRejectError(null);
+                        }}
                         rows={2}
                       />
+
                       <div className="flex gap-2">
                         <Button
                           variant="danger"
@@ -336,6 +401,7 @@ export default function PemasukanPage() {
                         >
                           Kirim Penolakan
                         </Button>
+                        
                         <Button
                           variant="secondary"
                           onClick={() => {

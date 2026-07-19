@@ -6,6 +6,8 @@ import { cn } from "@/src/lib/utils";
 import { useAuthStore } from "@/src/lib/auth-store";
 import { authApi } from "@/src/lib/api/auth";
 import { ROLE_LABEL } from "@/src/lib/utils";
+import Image from "next/image";
+import logo from "@/public/images/RTkuLogo.png";
 
 const NAV_ITEMS = [
   {
@@ -81,9 +83,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-surface-secondary">
       <aside className="hidden w-64 flex-col border-r border-border bg-surface md:flex">
-        <div className="flex items-center gap-2 px-6 py-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white">
-            <span className="material-symbols-outlined">account_balance</span>
+        <div className="flex items-end gap-2 px-6 py-6">
+          <div className="relative h-8 w-9">
+            <Image
+              src={logo}
+              alt="logortku"
+            />
           </div>
           <span className="text-lg font-bold text-text-primary">RTku</span>
         </div>

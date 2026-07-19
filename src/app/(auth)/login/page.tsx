@@ -2,28 +2,49 @@
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/src/lib/api/auth";
 import { useAuthStore } from "@/src/lib/auth-store";
 import { ApiError } from "@/src/lib/api/axios";
+import { loginSchema, type LoginFormValues } from "@/src/validations";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { detectDeviceType } from "@/src/lib/devices";
+import Image from "next/image";
+import logo from "@/public/images/RTkuLogo.png";
+import { User } from "@/src/types";
+
+function resolveRedirectPath(
+  user: User,
+  deviceType: "mobile" | "desktop",
+): string {
+  if (user.role === "superAdmin") return "/kelola-ketua-rt";
+  if (user.role === "warga") return "/beranda";
+
+  const isStaff = user.role === "bendahara" || user.role === "ketuaRT";
+  if (isStaff && deviceType === "mobile") return "/beranda";
+
+  return "/dashboard";
+}
 
 export default function LoginPage() {
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
+
+  async function onSubmit(values: LoginFormValues) {
     setError(null);
-    setLoading(true);
     try {
-      const res = await authApi.login({ email, password });
+      const res = await authApi.login(values);
       setUser(res.data);
 
       const deviceType = detectDeviceType();
@@ -31,29 +52,13 @@ export default function LoginPage() {
       // terpisah dari cookie "token" yang di-set backend.
       document.cookie = `device_type=${deviceType}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Strict`;
 
-      const isStaff =
-        res.data.role === "bendahara" || res.data.role === "ketuaRT";
-
-      if (res.data.role === "warga" || (isStaff && deviceType === "mobile")) {
-        router.push("/beranda");
-      } else {
-        router.push("/dashboard");
-      }
-      
-      if (res.data.role === "superAdmin") {
-        router.replace("/kelola-ketua-rt");
-        return;
-      }
-
-      router.replace("/dashboard");
+      router.replace(resolveRedirectPath(res.data, deviceType));
     } catch (err) {
       setError(
         err instanceof ApiError
           ? err.message
           : "Gagal masuk, silakan coba lagi",
       );
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -61,8 +66,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-surface-secondary px-6 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-30 w-30 items-center justify-center rounded-full bg-primary text-white">
-            <img className="w-fit" src="/images/screen.png" alt="Logo RTku" />
+          <div className="flex h-40 w-40 items-center justify-center rounded-full text-white">
+            <Image src={logo} alt="logortku" />
           </div>
           <h1 className="text-2xl font-bold text-text-primary">
             Masuk ke RTku
@@ -73,7 +78,7 @@ export default function LoginPage() {
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-4 rounded-card-lg border border-border bg-surface p-6 shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.05)]"
         >
           {error && (
@@ -87,22 +92,24 @@ export default function LoginPage() {
             type="email"
             label="Email"
             placeholder="nama@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            error={errors.email?.message}
+            {...register("email")}
           />
           <Input
             id="password"
             type="password"
             label="Kata Sandi"
             placeholder="Minimal 8 karakter"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
+            error={errors.password?.message}
+            {...register("password")}
           />
 
-          <Button type="submit" fullWidth loading={loading} className="mt-2">
+          <Button
+            type="submit"
+            fullWidth
+            loading={isSubmitting}
+            className="mt-2"
+          >
             Masuk
           </Button>
         </form>

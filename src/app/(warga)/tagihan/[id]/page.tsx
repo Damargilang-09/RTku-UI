@@ -19,6 +19,7 @@ import {
   monthName,
 } from "@/src/lib/utils";
 import type { Bill } from "@/src/types";
+import { paymentFormSchema, type PaymentFormValues } from "@/src/validations";
 
 function getPeriodLabel(bill: Bill) {
   if (bill.periodMonth && bill.periodYear) {
@@ -46,6 +47,9 @@ export default function TagihanDetailPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof PaymentFormValues, string>>
+  >({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -114,22 +118,51 @@ export default function TagihanDetailPage() {
     setError(null);
   }
 
+  function handlePaymentMethodChange(event: ChangeEvent<HTMLInputElement>) {
+    setPaymentMethod(event.target.value);
+    // Bersihkan error field ini begitu user mulai memperbaikinya.
+    if (fieldErrors.paymentMethod) {
+      setFieldErrors((prev) => ({ ...prev, paymentMethod: undefined }));
+    }
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+
+    setError(null);
+    setFieldErrors({});
+
+    // Validasi field non-file (paymentMethod) lewat zod.
+    const parsed = paymentFormSchema.safeParse({
+      paymentMethod: paymentMethod.trim() ? paymentMethod.trim() : undefined,
+    });
+
+    if (!parsed.success) {
+      const nextFieldErrors: Partial<Record<keyof PaymentFormValues, string>> =
+        {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as keyof PaymentFormValues;
+        if (key && !nextFieldErrors[key]) {
+          nextFieldErrors[key] = issue.message;
+        }
+      }
+      setFieldErrors(nextFieldErrors);
+      return;
+    }
 
     if (!file) {
       setError("Bukti pembayaran wajib diunggah.");
       return;
     }
 
-    setError(null);
     setSubmitting(true);
 
     try {
       const formData = new FormData();
       formData.append("PAYMENT_IMAGES", file);
-      if (paymentMethod.trim())
-        formData.append("paymentMethod", paymentMethod.trim());
+      if (parsed.data.paymentMethod) {
+        formData.append("paymentMethod", parsed.data.paymentMethod);
+      }
 
       await paymentsApi.create(params.id, formData);
       router.push("/tagihan?success=1");
@@ -195,12 +228,6 @@ export default function TagihanDetailPage() {
           </h1>
         </div>
       </header>
-
-      {error && (
-        <div className="rounded-2xl border border-danger/20 bg-danger-bg px-4 py-3.5 text-sm text-danger">
-          {error}
-        </div>
-      )}
 
       <Card className="overflow-hidden border-0 p-0 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.35)]">
         <div className="bg-primary px-5 pb-6 pt-5 text-white rounded-2xl">
@@ -382,11 +409,18 @@ export default function TagihanDetailPage() {
             </p>
           </Card>
 
+          {error && (
+            <div className="rounded-2xl border border-danger/20 bg-danger-bg px-4 py-3.5 text-sm text-danger">
+              {error}
+            </div>
+          )}
+
           <Input
             label="Metode Pembayaran (opsional)"
             placeholder="Contoh: Transfer BCA"
             value={paymentMethod}
-            onChange={(event) => setPaymentMethod(event.target.value)}
+            onChange={handlePaymentMethodChange}
+            error={fieldErrors.paymentMethod}
           />
 
           <div className="flex flex-col gap-2">

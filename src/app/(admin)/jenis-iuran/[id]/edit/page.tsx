@@ -9,6 +9,11 @@ import { Button } from "@/src/components/ui/Button";
 import { Input, Textarea } from "@/src/components/ui/Input";
 import { Spinner } from "@/src/components/ui/Spinner";
 import type { BillingPeriod } from "@/src/types";
+// Sesuaikan path import ini dengan lokasi file skema zod di project kamu.
+import {
+  feeTypeFormSchema,
+  type FeeTypeFormValues,
+} from "@/src/validations";
 
 const EMPTY_FORM = {
   name: "",
@@ -18,13 +23,18 @@ const EMPTY_FORM = {
   dueDay: "",
 };
 
+type FormState = typeof EMPTY_FORM;
+
 export default function EditJenisIuranPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof FeeTypeFormValues, string>>
+  >({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,40 +64,49 @@ export default function EditJenisIuranPage() {
     load();
   }, [load]);
 
-  function updateForm(key: keyof typeof form, value: string) {
+  function updateForm(key: keyof FormState, value: string) {
     setForm((current) => ({ ...current, [key]: value }));
+    if (fieldErrors[key as keyof FeeTypeFormValues]) {
+      setFieldErrors((current) => ({
+        ...current,
+        [key as keyof FeeTypeFormValues]: undefined,
+      }));
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setFieldErrors({});
 
-    if (!form.name.trim()) {
-      setError("Nama jenis iuran wajib diisi");
-      return;
-    }
+    const parsed = feeTypeFormSchema.safeParse({
+      name: form.name,
+      description: form.description.trim() ? form.description : undefined,
+      amount: form.amount,
+      billingPeriod: form.billingPeriod,
+      dueDay: form.billingPeriod === "monthly" ? form.dueDay : undefined,
+    });
 
-    if (!form.amount || Number(form.amount) <= 0) {
-      setError("Nominal harus lebih dari 0");
-      return;
-    }
-
-    if (form.billingPeriod === "monthly") {
-      const dueDay = Number(form.dueDay);
-
-      if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
-        setError("Tanggal jatuh tempo harus diisi dari tanggal 1 sampai 31");
-        return;
+    if (!parsed.success) {
+      const nextFieldErrors: Partial<Record<keyof FeeTypeFormValues, string>> =
+        {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as keyof FeeTypeFormValues;
+        if (key && !nextFieldErrors[key]) {
+          nextFieldErrors[key] = issue.message;
+        }
       }
+      setFieldErrors(nextFieldErrors);
+      return;
     }
 
     const payload = {
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
-      amount: Number(form.amount),
-      billingPeriod: form.billingPeriod,
-      ...(form.billingPeriod === "monthly"
-        ? { dueDay: Number(form.dueDay) }
+      name: parsed.data.name,
+      description: parsed.data.description,
+      amount: parsed.data.amount,
+      billingPeriod: parsed.data.billingPeriod,
+      ...(parsed.data.billingPeriod === "monthly"
+        ? { dueDay: Number(parsed.data.dueDay) }
         : {}),
     };
 
@@ -142,6 +161,7 @@ export default function EditJenisIuranPage() {
             label="Nama Jenis Iuran"
             value={form.name}
             onChange={(event) => updateForm("name", event.target.value)}
+            error={fieldErrors.name}
             required
           />
           <Input
@@ -150,6 +170,7 @@ export default function EditJenisIuranPage() {
             min="1"
             value={form.amount}
             onChange={(event) => updateForm("amount", event.target.value)}
+            error={fieldErrors.amount}
             required
           />
         </div>
@@ -159,6 +180,7 @@ export default function EditJenisIuranPage() {
           rows={4}
           value={form.description}
           onChange={(event) => updateForm("description", event.target.value)}
+          error={fieldErrors.description}
         />
 
         <label className="flex flex-col gap-1.5 text-sm font-medium text-text-primary">
@@ -184,6 +206,7 @@ export default function EditJenisIuranPage() {
             placeholder="Contoh: 10"
             value={form.dueDay}
             onChange={(event) => updateForm("dueDay", event.target.value)}
+            error={fieldErrors.dueDay}
             required
           />
         )}

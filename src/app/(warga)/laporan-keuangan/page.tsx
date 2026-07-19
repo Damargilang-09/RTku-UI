@@ -11,10 +11,9 @@ import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
 import { cn, formatRupiah, formatDate, monthName } from "@/src/lib/utils";
 import { isPdfUrl } from "@/src/lib/file-utils";
-import Link from "next/link";
 import type { Expense, Income, PaginationMeta, Report } from "@/src/types";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 const EMPTY_META: PaginationMeta = {
   page: 1,
   limit: PAGE_SIZE,
@@ -147,12 +146,12 @@ function StatusFilteredList<T extends { id: string }>({
 
       {!loading && items.length > 0 && (
         <div className="flex flex-col gap-3 rounded-card border border-border bg-surface px-4 py-3">
-          <p className="text-xs text-text-secondary">
+          <p className="flex justify-center text-xs text-text-secondary">
             Menampilkan {(meta.page - 1) * meta.limit + 1}–
             {Math.min(meta.page * meta.limit, meta.totalData)} dari{" "}
             {meta.totalData} {itemLabel}
           </p>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex justify-center flex-wrap items-center gap-2">
             <Button
               variant="secondary"
               className="h-9 px-3 py-0 text-xs"
