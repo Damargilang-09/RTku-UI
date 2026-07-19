@@ -1,14 +1,29 @@
 import { api } from "./axios";
-import type { ApiResponse, User, UserListResponse } from "@/src/types";
+import type {
+  ApiResponse,
+  User,
+  UserListResponse,
+  UserRole,
+  UserStatus,
+} from "@/src/types";
+
+interface UserListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: UserStatus;
+  role?: Extract<UserRole, "warga" | "bendahara">;
+}
 
 export const usersApi = {
-  async getAll(params = {}) {
+  async getAll(params: UserListParams = {}) {
     const res = await api.get<ApiResponse<UserListResponse>>("/users", {
       params,
     });
 
     return res.data;
   },
+
   async getDetail(id: string) {
     const res = await api.get<ApiResponse<User>>(`/users/${id}`);
     return res.data;
