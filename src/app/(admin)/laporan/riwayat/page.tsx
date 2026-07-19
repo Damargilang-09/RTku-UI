@@ -11,6 +11,7 @@ import { formatRupiah, formatDate, monthName } from "@/src/lib/utils";
 import { isPdfUrl } from "@/src/lib/file-utils";
 import type { PaginationMeta, Report } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
+import { Input } from "@/src/components/ui/Input";
 
 const PAGE_SIZE = 10;
 
@@ -21,29 +22,100 @@ const EMPTY_META: PaginationMeta = {
   totalPage: 1,
 };
 
+type SortValue = "newest" | "oldest" | "highest_balance" | "lowest_balance";
+
+const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
+
+const YEARS = Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i);
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Terbaru" },
+  { value: "oldest", label: "Terlama" },
+  { value: "highest_balance", label: "Saldo Terbesar" },
+  { value: "lowest_balance", label: "Saldo Terkecil" },
+] as const;
+
 export default function RiwayatLaporanPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState<PaginationMeta>(EMPTY_META);
   const [loading, setLoading] = useState(true);
   const [openImage, setOpenImage] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [monthFilter, setMonthFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
+  const [sort, setSort] = useState<SortValue>("newest");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const load = useCallback(() => {
     setLoading(true);
+
     reportsApi
-      .getAll({ page, limit: PAGE_SIZE })
+      .getAll({
+        page,
+        limit: PAGE_SIZE,
+        search: debouncedSearch,
+        month: monthFilter ? Number(monthFilter) : undefined,
+        year: yearFilter ? Number(yearFilter) : undefined,
+      })
       .then((res) => {
         setReports(res.data);
         setMeta(
-          res.meta ?? { ...EMPTY_META, page, totalData: res.data.length },
+          res.meta ?? {
+            ...EMPTY_META,
+            page,
+            totalData: res.data.length,
+          },
         );
       })
       .finally(() => setLoading(false));
-  }, [page]);
+  }, [page, debouncedSearch, monthFilter, yearFilter]);
+
+  const filteredReports = reports.filter((report) => {
+    if (!statusFilter) return true;
+
+    return report.status === statusFilter;
+  });
+  
+  useEffect(() => {
+  setPage(1);
+}, [debouncedSearch, monthFilter, yearFilter, statusFilter]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  const sortedReports = [...filteredReports].sort((a, b) => {
+    switch (sort) {
+      case "oldest":
+        return (
+          new Date(a.created_at ?? "").getTime() -
+          new Date(b.created_at ?? "").getTime()
+        );
+
+      case "highest_balance":
+        return b.closing_balance - a.closing_balance;
+
+      case "lowest_balance":
+        return a.closing_balance - b.closing_balance;
+
+      default:
+        return (
+          new Date(b.created_at ?? "").getTime() -
+          new Date(a.created_at ?? "").getTime()
+        );
+    }
+  });
+
+  const resetFilters = () => {
+    setSearch("");
+    setStatusFilter("");
+    setMonthFilter("");
+    setYearFilter("");
+    setSort("newest");
+    setPage(1);
+  };
 
   const visiblePages = Array.from(
     { length: meta.totalPage },
@@ -52,6 +124,14 @@ export default function RiwayatLaporanPage() {
     (number) =>
       number === 1 || number === meta.totalPage || Math.abs(number - page) <= 1,
   );
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   if (loading) return <Spinner />;
 
@@ -72,6 +152,77 @@ export default function RiwayatLaporanPage() {
         </div>
       </div>
 
+      <Card className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <Input
+            placeholder="Cari nama pengaju / penyetuju..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-xl border border-border bg-surface px-3 py-3 text-sm"
+          >
+            <option value="">Semua Status</option>
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+            <option value="failed">Failed</option>
+          </select>
+
+          <select
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+            className="rounded-xl border border-border bg-surface px-3 py-3 text-sm"
+          >
+            <option value="">Semua Bulan</option>
+
+            {MONTHS.map((m) => (
+              <option key={m} value={m}>
+                {monthName(m)}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            className="rounded-xl border border-border bg-surface px-3 py-3 text-sm"
+          >
+            <option value="">Semua Tahun</option>
+
+            {YEARS.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortValue)}
+            className="rounded-xl border border-border bg-surface px-3 py-3 text-sm"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                Urutkan: {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {(search || statusFilter || monthFilter || yearFilter) && (
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="self-start text-xs font-medium text-primary hover:underline"
+          >
+            Reset semua filter
+          </button>
+        )}
+      </Card>
+
       {loading ? (
         <Spinner />
       ) : reports.length === 0 ? (
@@ -82,7 +233,7 @@ export default function RiwayatLaporanPage() {
         />
       ) : (
         <div className="flex flex-col gap-4">
-          {reports.map((r) => (
+          {sortedReports.map((r) => (
             <Card
               key={r.id}
               className="flex flex-col gap-4 sm:flex-row sm:items-start"
@@ -95,7 +246,9 @@ export default function RiwayatLaporanPage() {
                     rel="noopener noreferrer"
                     className="flex h-28 w-full shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-surface-tertiary text-danger hover:bg-border sm:w-40"
                   >
-                    <span className="material-symbols-outlined text-3xl">picture_as_pdf</span>
+                    <span className="material-symbols-outlined text-3xl">
+                      picture_as_pdf
+                    </span>
                     <span className="mt-1 text-xs font-semibold">Buka PDF</span>
                   </a>
                 ) : (
@@ -114,7 +267,9 @@ export default function RiwayatLaporanPage() {
                 )
               ) : (
                 <div className="flex h-28 w-full shrink-0 items-center justify-center rounded-xl border border-dashed border-border bg-surface-tertiary text-text-muted sm:w-40">
-                  <span className="material-symbols-outlined">image_not_supported</span>
+                  <span className="material-symbols-outlined">
+                    image_not_supported
+                  </span>
                 </div>
               )}
 

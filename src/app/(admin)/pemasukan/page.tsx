@@ -10,7 +10,7 @@ import { Button } from "@/src/components/ui/Button";
 import { Input, Textarea } from "@/src/components/ui/Input";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
-import { cn, formatRupiah, formatDate } from "@/src/lib/utils";
+import { cn, formatRupiah, formatDate, monthName } from "@/src/lib/utils";
 import type { ApprovalStatus, Income, PaginationMeta } from "@/src/types";
 import {
   incomeFormSchema,
@@ -58,6 +58,43 @@ export default function PemasukanPage() {
   const user = useAuthStore((s) => s.user);
   const [tab, setTab] = useState<ApprovalStatus>("pending");
   const [income, setIncome] = useState<Income[]>([]);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [monthFilter, setMonthFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
+
+  const SORT_OPTIONS = [
+    { value: "income_date_desc", label: "Tanggal Terbaru" },
+    { value: "income_date_asc", label: "Tanggal Terlama" },
+    { value: "amount_desc", label: "Nominal Tertinggi" },
+    { value: "amount_asc", label: "Nominal Terendah" },
+  ] as const;
+
+  type SortValue = (typeof SORT_OPTIONS)[number]["value"];
+
+  const [sort, setSort] = useState<SortValue>("income_date_desc");
+
+  const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  const CURRENT_YEAR = new Date().getFullYear();
+
+  const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [search]);
+
+  useEffect(() => {
+    setPageByTab((prev) => ({
+      ...prev,
+      [tab]: 1,
+    }));
+  }, [debouncedSearch, monthFilter, yearFilter, tab]);
+
   // Each tab keeps track of its own current page.
   const [pageByTab, setPageByTab] = useState<Record<ApprovalStatus, number>>({
     pending: 1,
@@ -88,6 +125,7 @@ export default function PemasukanPage() {
   const [reason, setReason] = useState("");
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<
     Partial<Record<keyof IncomeFormValues, string>>
@@ -99,7 +137,21 @@ export default function PemasukanPage() {
   const load = useCallback(() => {
     setLoading(true);
     incomeApi
-      .getAll({ status: tab, page, limit: PAGE_SIZE })
+      .getAll({
+        status: tab,
+        page,
+        limit: PAGE_SIZE,
+
+        search: debouncedSearch || undefined,
+
+        month: monthFilter ? Number(monthFilter) : undefined,
+
+        year: yearFilter ? Number(yearFilter) : undefined,
+
+        sortBy: sort.split("_")[0],
+
+        sortOrder: sort.split("_")[1] as "asc" | "desc",
+      })
       .then((response) => {
         const items = response.data ?? [];
         const responseMeta = response.meta ?? {
@@ -112,7 +164,7 @@ export default function PemasukanPage() {
         setMetaByTab((prev) => ({ ...prev, [tab]: responseMeta }));
       })
       .finally(() => setLoading(false));
-  }, [tab, page]);
+  }, [tab, page, debouncedSearch, monthFilter, yearFilter, sort]);
 
   useEffect(() => {
     load();
@@ -120,6 +172,13 @@ export default function PemasukanPage() {
 
   function setPage(newPage: number) {
     setPageByTab((prev) => ({ ...prev, [tab]: newPage }));
+  }
+
+  function resetFilters() {
+    setSearch("");
+    setMonthFilter("");
+    setYearFilter("");
+    setSort("income_date_desc");
   }
 
   function update(key: keyof typeof form, value: string) {
@@ -234,6 +293,22 @@ export default function PemasukanPage() {
     }
   }
 
+  async function handleDelete(id: string) {
+    if (!confirm("Yakin ingin menghapus catatan pemasukan ini?")) return;
+    setDeletingId(id);
+    setError(null);
+    try {
+      await incomeApi.delete(id);
+      load();
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "Gagal menghapus pemasukan",
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   const canApprove = user?.role === "ketuaRT";
   const canCreate = user?.role === "bendahara";
 
@@ -335,6 +410,66 @@ export default function PemasukanPage() {
         ))}
       </div>
 
+      <Card className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Input
+            placeholder="Cari judul / kode pemasukan..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <select
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+            className="rounded-xl border border-border bg-surface px-3 py-3 text-sm"
+          >
+            <option value="">Semua Bulan</option>
+
+            {MONTHS.map((m) => (
+              <option key={m} value={m}>
+                {monthName(m)}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            className="rounded-xl border border-border bg-surface px-3 py-3 text-sm"
+          >
+            <option value="">Semua Tahun</option>
+
+            {YEARS.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortValue)}
+            className="rounded-xl border border-border bg-surface px-3 py-3 text-sm"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                Urutkan: {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {(search || monthFilter || yearFilter) && (
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="self-start text-xs font-medium text-primary hover:underline"
+          >
+            Reset semua filter
+          </button>
+        )}
+      </Card>
+
       {error && (
         <div className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">
           {error}
@@ -375,6 +510,22 @@ export default function PemasukanPage() {
                 </div>
               </div>
 
+              {canCreate && (
+                <div className="mt-3 flex justify-end">
+                  <Button
+                    variant="danger"
+                    className="px-3 py-2 text-xs"
+                    loading={deletingId === inc.id}
+                    onClick={() => handleDelete(inc.id)}
+                  >
+                    <span className="material-symbols-outlined text-base">
+                      delete
+                    </span>
+                    Hapus
+                  </Button>
+                </div>
+              )}
+
               {canApprove && inc.status === "pending" && (
                 <div className="mt-4 flex flex-col gap-3">
                   {rejectingId === inc.id ? (
@@ -401,7 +552,7 @@ export default function PemasukanPage() {
                         >
                           Kirim Penolakan
                         </Button>
-                        
+
                         <Button
                           variant="secondary"
                           onClick={() => {

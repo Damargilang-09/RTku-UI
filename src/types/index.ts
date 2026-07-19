@@ -67,9 +67,12 @@ export interface Payment {
   userName?: string;
   feeTypeName?: string;
   approvedBy?: string | null;
+  houseNumber: string | null;
   billStatus?: BillStatus;
   createdAt?: string;
 }
+
+
 
 export interface Expense {
   id: string;

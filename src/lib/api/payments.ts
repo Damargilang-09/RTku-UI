@@ -1,5 +1,5 @@
 import { api } from "./axios";
-import type { ApiResponse, Payment, PaginationMeta } from "@/src/types";
+import type { ApiResponse, Payment, PaginationMeta} from "@/src/types";
 
 export const paymentsApi = {
   async create(billId: string, formData: FormData) {
@@ -19,6 +19,7 @@ export const paymentsApi = {
     const res = await api.get<ApiResponse<Payment>>(`/payment/detail/${id}`);
     return res.data;
   },
+
 
   // bendahara
   async getAll(params: Record<string, string | number | undefined> = {}) {
