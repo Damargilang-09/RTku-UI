@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { reportsApi } from "@/src/lib/api/reports";
 import { paymentsApi } from "@/src/lib/api/payments";
 import { incomeApi } from "@/src/lib/api/income";
@@ -10,6 +10,10 @@ import { Card } from "@/src/components/ui/Card";
 import { StatusChip } from "@/src/components/ui/StatusChip";
 import { Spinner } from "@/src/components/ui/Spinner";
 import { EmptyState } from "@/src/components/ui/EmptyState";
+import {
+  IncomeExpenseChart,
+  type ChartDataPoint,
+} from "@/src/components/chart/IncomeExpenseChart";
 import {
   formatRupiah,
   formatDate,
@@ -24,6 +28,12 @@ import type {
   Report,
 } from "@/src/types";
 
+function currentMonthInput(offset = 0): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + offset);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export default function AdminDashboardPage() {
   const user = useAuthStore((s) => s.user);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -32,6 +42,12 @@ export default function AdminDashboardPage() {
   const [pendingExpenses, setPendingExpenses] = useState<Expense[]>([]);
   const [openReports, setOpenReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // filter grafik pemasukan vs pengeluaran
+  const [rangeFrom, setRangeFrom] = useState(() => currentMonthInput(-5)); // default 6 bulan terakhir
+  const [rangeTo, setRangeTo] = useState(() => currentMonthInput(0));
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [chartLoading, setChartLoading] = useState(true);
 
   const isBendahara = user?.role === "bendahara";
   const isKetuaRT = user?.role === "ketuaRT";
@@ -70,6 +86,42 @@ export default function AdminDashboardPage() {
     Promise.all(tasks).finally(() => setLoading(false));
   }, [isBendahara, isKetuaRT]);
 
+  const loadChart = useCallback(() => {
+    setChartLoading(true);
+    reportsApi
+      .getAll({ limit: 100 })
+      .then((res) => {
+        const [fromYear, fromMonth] = rangeFrom.split("-").map(Number);
+        const [toYear, toMonth] = rangeTo.split("-").map(Number);
+        const fromKey = fromYear * 12 + fromMonth;
+        const toKey = toYear * 12 + toMonth;
+
+        const filtered = (res.data ?? [])
+          .filter((r) => {
+            const key = r.period_year * 12 + r.period_month;
+            return key >= fromKey && key <= toKey;
+          })
+          .sort(
+            (a, b) =>
+              a.period_year * 12 +
+              a.period_month -
+              (b.period_year * 12 + b.period_month),
+          )
+          .map((r) => ({
+            label: `${monthName(r.period_month).slice(0, 3)} ${r.period_year}`,
+            income: Number(r.total_income),
+            expense: Number(r.total_expense),
+          }));
+
+        setChartData(filtered);
+      })
+      .finally(() => setChartLoading(false));
+  }, [rangeFrom, rangeTo]);
+
+  useEffect(() => {
+    loadChart();
+  }, [loadChart]);
+
   if (loading) return <Spinner />;
 
   return (
@@ -85,14 +137,14 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className=" text-text-primary">
+        <Card>
           <div className="flex items-center justify-between">
             <span className="text-sm text-text-secondary">Saldo Kas RT</span>
             <span className="material-symbols-outlined">
               account_balance_wallet
             </span>
           </div>
-          <p className="mt-2 text-2xl font-bold">
+          <p className="mt-2 text-2xl font-bold text-text-primary">
             {formatRupiah(summary?.saldo ?? 0)}
           </p>
         </Card>
@@ -123,6 +175,34 @@ export default function AdminDashboardPage() {
           </p>
         </Card>
       </div>
+
+      <Card>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-semibold text-text-primary">
+            Pemasukan vs Pengeluaran
+          </h2>
+          <div className="flex items-center gap-2 text-sm">
+            <input
+              type="month"
+              value={rangeFrom}
+              max={rangeTo}
+              onChange={(e) => setRangeFrom(e.target.value)}
+              className="rounded-lg border border-border px-3 py-1.5 text-text-primary"
+            />
+            <span className="text-text-muted">s/d</span>
+            <input
+              type="month"
+              value={rangeTo}
+              min={rangeFrom}
+              max={currentMonthInput(0)}
+              onChange={(e) => setRangeTo(e.target.value)}
+              className="rounded-lg border border-border px-3 py-1.5 text-text-primary"
+            />
+          </div>
+        </div>
+
+        {chartLoading ? <Spinner /> : <IncomeExpenseChart data={chartData} />}
+      </Card>
 
       {isBendahara && (
         <div>
