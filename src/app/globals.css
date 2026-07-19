@@ -1,43 +1,63 @@
-/* app/globals.css */
+@import "tailwindcss";
 
-/* 1. Setup Layer untuk mencegah tabrakan sesuai konfigurasi sebelumnya */
-@layer tailwind-base, mantine, tailwind-utilities;
+@theme {
+  --font-sans: "Inter", ui-sans-serif, sans-serif;
 
-@layer tailwind-base {
-  @import "tailwindcss";
-}
-
-/* 2. Daftarkan Design System dari Screenshot ke dalam CSS Variables */
-:root {
-  /* Colors dari Template */
+  /* Brand */
   --color-primary: #0052cc;
+  --color-primary-dark: #003d9b;
+  --color-primary-light: #e0e9ff;
   --color-secondary: #22c55e;
-  --color-tertiary: #64748b;
-  --color-neutral-bg: #f8fafc;
-  --color-inverted: #1e293b;
-  
-  /* Tambahan warna fungsional dari komponen di gambar */
-  --color-border: #e2e8f0;
-  --color-search-bg: #e2e8f0;
-  --color-danger: #dc2626; /* Tombol merah di kanan bawah */
+  --color-secondary-dark: #16a34a;
 
-  /* Typography */
-  --font-sans: 'Inter', sans-serif;
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f8fafc;
+  --color-surface-tertiary: #f1f5f9;
+  --color-border: #e2e8f0;
+
+  /* Text */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+
+  /* Status */
+  --color-danger: #dc2626;
+  --color-danger-bg: #fee2e2;
+  --color-warning: #92400e;
+  --color-warning-bg: #fef3c7;
+  --color-success: #166534;
+  --color-success-bg: #dcfce7;
+  --color-info: #1d4ed8;
+  --color-info-bg: #dbeafe;
+
+  --radius-card: 1rem;
+  --radius-card-lg: 1.5rem;
 }
 
-/* 3. Base Styling Aplikasi */
 body {
   font-family: var(--font-sans);
-  background-color: #e2e8f0; /* Background abu-abu luar seperti di gambar */
-  color: var(--color-inverted);
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* 4. Kustomisasi Dasar untuk Card Container (opsional, menyerupai visual gambar) */
-.ui-card {
-  background-color: var(--color-neutral-bg);
-  border-radius: 1.5rem; /* rounded-3xl dari visual rounded tebal di gambar */
-  padding: 1.5rem;
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+  font-size: 1.25rem;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 999px;
 }
