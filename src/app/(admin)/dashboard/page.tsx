@@ -43,8 +43,8 @@ export default function AdminDashboardPage() {
   const [openReports, setOpenReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // filter grafik pemasukan vs pengeluaran
-  const [rangeFrom, setRangeFrom] = useState(() => currentMonthInput(-5)); // default 6 bulan terakhir
+ 
+  const [rangeFrom, setRangeFrom] = useState(() => currentMonthInput(-5)); 
   const [rangeTo, setRangeTo] = useState(() => currentMonthInput(0));
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [chartLoading, setChartLoading] = useState(true);

@@ -120,7 +120,6 @@ export default function TagihanDetailPage() {
 
   function handlePaymentMethodChange(event: ChangeEvent<HTMLInputElement>) {
     setPaymentMethod(event.target.value);
-    // Bersihkan error field ini begitu user mulai memperbaikinya.
     if (fieldErrors.paymentMethod) {
       setFieldErrors((prev) => ({ ...prev, paymentMethod: undefined }));
     }
@@ -132,7 +131,6 @@ export default function TagihanDetailPage() {
     setError(null);
     setFieldErrors({});
 
-    // Validasi field non-file (paymentMethod) lewat zod.
     const parsed = paymentFormSchema.safeParse({
       paymentMethod: paymentMethod.trim() ? paymentMethod.trim() : undefined,
     });
@@ -430,7 +428,6 @@ export default function TagihanDetailPage() {
             <label className="relative flex min-h-44 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-surface px-4 py-6 text-center transition-colors active:bg-surface-tertiary">
               {preview ? (
                 <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={preview}
                     alt="Pratinjau bukti pembayaran"

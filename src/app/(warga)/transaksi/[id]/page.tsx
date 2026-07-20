@@ -132,7 +132,6 @@ export default function DetailTransaksiPage() {
                   onClick={() => setOpenImage(true)}
                   className="block w-full overflow-hidden rounded-card border border-border"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={payment.paymentProof}
                     alt="Bukti pembayaran"
@@ -156,7 +155,6 @@ export default function DetailTransaksiPage() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
             onClick={() => setOpenImage(false)}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={payment.paymentProof}
               alt="Bukti pembayaran diperbesar"

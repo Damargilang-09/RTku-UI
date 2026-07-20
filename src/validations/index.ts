@@ -75,9 +75,7 @@ export const feeTypeFormSchema = z
     billingPeriod: z.enum(["monthly", "once"], {
       error: "Periode penagihan wajib dipilih",
     }),
-    // Disimpan sebagai string mentah dari input, divalidasi manual di
-    // superRefine di bawah supaya nilai kosong ("") saat billingPeriod
-    // "once" tidak ikut ter-coerce jadi 0.
+   
     dueDay: z.string().optional(),
   })
   .superRefine((data, ctx) => {

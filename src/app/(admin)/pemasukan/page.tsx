@@ -101,7 +101,7 @@ export default function PemasukanPage() {
     approved: 1,
     rejected: 1,
   });
-  // Each tab keeps track of its own pagination meta (total data/pages).
+
   const [metaByTab, setMetaByTab] = useState<
     Record<ApprovalStatus, PaginationMeta>
   >({
