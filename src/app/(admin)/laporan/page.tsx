@@ -227,7 +227,6 @@ export default function LaporanKeuanganPage() {
                 <StatusChip status={r.status} />
               </div>
 
-              {/* Preview bukti laporan */}
               {r.report_proof_img &&
                 (isPdfUrl(r.report_proof_img) ? (
                   <a
@@ -245,7 +244,6 @@ export default function LaporanKeuanganPage() {
                     onClick={() => setOpenImage(r.report_proof_img)}
                     className="mt-3 block w-full"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={r.report_proof_img}
                       alt={`Bukti laporan ${monthName(r.period_month)} ${r.period_year}`}
@@ -280,7 +278,6 @@ export default function LaporanKeuanganPage() {
                 </p>
               )}
 
-              {/* Bendahara bisa upload ulang bukti kalau laporan ditandai gagal */}
               {canCreate && r.status === "failed" && (
                 <label className="mt-4 block cursor-pointer border-t border-surface-tertiary pt-4">
                   <span className="inline-flex items-center gap-2 rounded-xl bg-surface-tertiary px-4 py-2.5 text-sm font-semibold text-text-primary hover:bg-border">
@@ -362,7 +359,6 @@ export default function LaporanKeuanganPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
           onClick={() => setOpenImage(null)}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={openImage}
             alt="Bukti laporan diperbesar"

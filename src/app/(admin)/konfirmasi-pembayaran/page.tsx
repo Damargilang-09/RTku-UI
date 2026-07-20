@@ -100,7 +100,6 @@ export default function KonfirmasiPembayaranPage() {
 
   const load = useCallback(() => {
     setLoading(true);
-    // "Jenis Iuran" pakai nama fee type yang dipilih, atau teks pencarian bebas
     const effectiveSearch = feeTypeFilter || debouncedSearch || undefined;
 
     paymentsApi
@@ -317,7 +316,6 @@ export default function KonfirmasiPembayaranPage() {
                     onClick={() => setOpenImage(p.paymentProof ?? "")}
                     className="mt-3 block w-40 overflow-hidden rounded-xl border border-border"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.paymentProof} alt="Bukti pembayaran" className="h-40 w-40 object-cover" />
                   </button>
                 ))}
@@ -397,7 +395,6 @@ export default function KonfirmasiPembayaranPage() {
 
       {openImage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={() => setOpenImage(null)}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={openImage} alt="Bukti pembayaran diperbesar" className="max-h-full max-w-full rounded-xl object-contain" />
           <button
             type="button"

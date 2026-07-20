@@ -42,7 +42,10 @@ export default function KelolaWargaPage() {
   >("");
   const [status, setStatus] = useState<"" | UserStatus>("");
   const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<{
+    userId: string;
+    action: "status" | "role" | "delete";
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -96,7 +99,7 @@ export default function KelolaWargaPage() {
   }
 
   async function toggleStatus(user: User) {
-    setBusyId(user.id);
+    setBusyAction({ userId: user.id, action: "status" });
     setError(null);
 
     try {
@@ -111,12 +114,12 @@ export default function KelolaWargaPage() {
           : "Gagal memperbarui status warga",
       );
     } finally {
-      setBusyId(null);
+      setBusyAction(null);
     }
   }
 
   async function toggleRole(user: User) {
-    setBusyId(user.id);
+    setBusyAction({ userId: user.id, action: "role" });
     setError(null);
 
     try {
@@ -129,7 +132,7 @@ export default function KelolaWargaPage() {
         err instanceof ApiError ? err.message : "Gagal memperbarui peran warga",
       );
     } finally {
-      setBusyId(null);
+      setBusyAction(null);
     }
   }
 
@@ -140,7 +143,7 @@ export default function KelolaWargaPage() {
 
     if (!confirmed) return;
 
-    setBusyId(user.id);
+    setBusyAction({ userId: user.id, action: "delete" });
     setError(null);
 
     try {
@@ -149,7 +152,7 @@ export default function KelolaWargaPage() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Gagal menghapus warga");
     } finally {
-      setBusyId(null);
+      setBusyAction(null);
     }
   }
 
@@ -290,7 +293,10 @@ export default function KelolaWargaPage() {
                       <Button
                         variant="secondary"
                         className="px-3 py-1.5 text-xs"
-                        loading={busyId === user.id}
+                        loading={
+                          busyAction?.userId === user.id &&
+                          busyAction?.action === "status"
+                        }
                         onClick={() => toggleStatus(user)}
                       >
                         {user.status === "active" ? "Nonaktifkan" : "Aktifkan"}
@@ -298,7 +304,10 @@ export default function KelolaWargaPage() {
                       <Button
                         variant="ghost"
                         className="px-3 py-1.5 text-xs"
-                        loading={busyId === user.id}
+                        loading={
+                          busyAction?.userId === user.id &&
+                          busyAction?.action === "role"
+                        }
                         onClick={() => toggleRole(user)}
                       >
                         Jadikan{" "}
@@ -307,7 +316,10 @@ export default function KelolaWargaPage() {
                       <Button
                         variant="danger"
                         className="px-3 py-1.5 text-xs"
-                        loading={busyId === user.id}
+                        loading={
+                          busyAction?.userId === user.id &&
+                          busyAction?.action === "delete"
+                        }
                         onClick={() => deleteUser(user)}
                       >
                         Hapus

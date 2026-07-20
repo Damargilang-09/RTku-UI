@@ -113,7 +113,6 @@ export default function DetailPengeluaranPage() {
                       onClick={() => setOpenImage(img.attachment_url)}
                       className="aspect-square overflow-hidden rounded-xl border border-border"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={img.attachment_url}
                         alt="Bukti pengeluaran"

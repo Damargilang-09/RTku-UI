@@ -349,7 +349,6 @@ export default function RiwayatLaporanPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
           onClick={() => setOpenImage(null)}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={openImage}
             alt="Bukti laporan diperbesar"

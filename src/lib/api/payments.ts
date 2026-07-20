@@ -1,5 +1,6 @@
 import { api } from "./axios";
-import type { ApiResponse, Payment, PaginationMeta} from "@/src/types";
+import type { ApiResponse, Payment, PaginationMeta, ApprovalStatus} from "@/src/types";
+
 
 export const paymentsApi = {
   async create(billId: string, formData: FormData) {
@@ -7,7 +8,14 @@ export const paymentsApi = {
     return res.data;
   },
 
-  async getMyPayments(params?: { page?: number; limit?: number }) {
+  async getMyPayments(params?: {
+  page?: number;
+  limit?: number;
+  status?: ApprovalStatus;
+  search?: string;
+  month?: number;
+  year?: number;
+}) {
   const res = await api.get<ApiResponse<Payment[]> & { meta: PaginationMeta }>(
     "/payment/transaction",
     { params },
@@ -29,6 +37,7 @@ export const paymentsApi = {
     );
     return res.data;
   },
+
 
   async approve(id: string, payload: { status: "approved" | "rejected"; rejectedReason?: string }) {
     const res = await api.patch<ApiResponse<Payment>>(`/payment/${id}`, payload);

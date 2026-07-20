@@ -41,11 +41,7 @@ const APPROVAL_STATUS_TABS = [
   { value: "rejected", label: "Ditolak" },
 ];
 
-// ---------------------------------------------------------------------------
-// Komponen generik: daftar dengan filter status + pagination sendiri.
-// Dipakai ulang untuk ketiga jenis data (laporan/pengeluaran/pemasukan)
-// supaya masing-masing benar-benar independen (tab & halamannya sendiri).
-// ---------------------------------------------------------------------------
+
 interface StatusFilteredListProps<T> {
   statusTabs: { value: string; label: string }[];
   fetchPage: (
@@ -201,9 +197,6 @@ function StatusFilteredList<T extends { id: string }>({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Halaman utama
-// ---------------------------------------------------------------------------
 export default function LaporanKeuanganWargaPage() {
   const [section, setSection] = useState<Section>("laporan");
   const [openImage, setOpenImage] = useState<string | null>(null);
@@ -268,7 +261,6 @@ export default function LaporanKeuanganWargaPage() {
                     onClick={() => setOpenImage(r.report_proof_img)}
                     className="shrink-0"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={r.report_proof_img}
                       alt={`Bukti laporan ${monthName(r.period_month)} ${r.period_year}`}
@@ -389,7 +381,6 @@ export default function LaporanKeuanganWargaPage() {
                           }}
                           className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border"
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={img.attachment_url}
                             alt="Bukti pengeluaran"
@@ -461,7 +452,6 @@ export default function LaporanKeuanganWargaPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
           onClick={() => setOpenImage(null)}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={openImage}
             alt="Bukti diperbesar"

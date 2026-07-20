@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,21 +33,24 @@ export default function LoginPage() {
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  });
 
   async function onSubmit(values: LoginFormValues) {
     setError(null);
+
     try {
       const res = await authApi.login(values);
       setUser(res.data);
 
       const deviceType = detectDeviceType();
+
       // Cookie ini murni penanda device untuk dibaca middleware,
       // terpisah dari cookie "token" yang di-set backend.
       document.cookie = `device_type=${deviceType}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Strict`;
@@ -69,9 +72,11 @@ export default function LoginPage() {
           <div className="flex h-40 w-40 items-center justify-center rounded-full text-white">
             <Image src={logo} alt="logortku" />
           </div>
+
           <h1 className="text-2xl font-bold text-text-primary">
             Masuk ke RTku
           </h1>
+
           <p className="text-sm text-text-secondary">
             Kelola iuran dan keuangan RT dengan mudah dan transparan.
           </p>
@@ -95,6 +100,7 @@ export default function LoginPage() {
             error={errors.email?.message}
             {...register("email")}
           />
+
           <Input
             id="password"
             type="password"
@@ -107,10 +113,21 @@ export default function LoginPage() {
           <Button
             type="submit"
             fullWidth
-            loading={isSubmitting}
+            disabled={isSubmitting}
             className="mt-2"
           >
             Masuk
+
+            {isSubmitting && (
+              // Sengaja pakai spinner manual (bukan Button.loading) karena
+              // material-symbols-outlined kadang belum ke-load saat halaman
+              // login pertama kali diakses, sehingga teks "progress_activity"
+              // sempat terlihat sebelum jadi ikon.
+              <span
+                className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                aria-hidden="true"
+              />
+            )}
           </Button>
         </form>
 
