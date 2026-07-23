@@ -12,7 +12,7 @@ export class ApiError extends Error {
 // Instance axios tunggal dipakai semua modul di lib/api/*.
 // baseURL + withCredentials di-set sekali di sini saja.
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/RTku/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "/RTku/api",
   withCredentials: true, // kirim cookie JWT ke backend
 });
 
