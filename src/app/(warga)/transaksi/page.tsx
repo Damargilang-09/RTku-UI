@@ -77,56 +77,50 @@ export default function TransaksiPage() {
       .catch(() => undefined);
   }, []);
 
-  const load = useCallback(() => {
-    setLoading(true);
-    const effectiveSearch = feeTypeFilter || debouncedSearch || undefined;
+const load = useCallback(() => {
+  setLoading(true);
 
-    paymentsApi
-      .getMyPayments({
-        page,
-        limit: PAGE_SIZE,
-        status: statusFilter || undefined,
-        search: effectiveSearch,
-        month: monthFilter && yearFilter ? Number(monthFilter) : undefined,
-        year: monthFilter && yearFilter ? Number(yearFilter) : undefined,
-      })
-      .then((res) => {
-        setPayments(res.data);
-        setMeta(
-          res.meta ?? { ...EMPTY_META, page, totalData: res.data.length },
-        );
-      })
-      .finally(() => setLoading(false));
-  }, [
-    page,
-    statusFilter,
-    debouncedSearch,
-    feeTypeFilter,
-    monthFilter,
-    yearFilter,
-  ]);
+  paymentsApi
+    .getMyPayments({
+      page,
+      limit: PAGE_SIZE,
+      status: statusFilter || undefined,
+      search: debouncedSearch || undefined,
+      month: monthFilter && yearFilter ? Number(monthFilter) : undefined,
+      year: monthFilter && yearFilter ? Number(yearFilter) : undefined,
+    })
+    .then((res) => {
+      setPayments(res.data);
+      setMeta(res.meta ?? { ...EMPTY_META, page, totalData: res.data.length });
+    })
+    .finally(() => setLoading(false));
+}, [page, statusFilter, debouncedSearch, monthFilter, yearFilter]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   const sortedPayments = useMemo(() => {
-    const sorted = [...payments];
-    sorted.sort((a, b) => {
-      switch (sort) {
-        case "paidAt_asc":
-          return new Date(a.paidAt).getTime() - new Date(b.paidAt).getTime();
-        case "amount_desc":
-          return Number(b.amount) - Number(a.amount);
-        case "amount_asc":
-          return Number(a.amount) - Number(b.amount);
-        case "paidAt_desc":
-        default:
-          return new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime();
-      }
-    });
-    return sorted;
-  }, [payments, sort]);
+  const filtered = feeTypeFilter
+    ? payments.filter((p) => p.feeTypeName === feeTypeFilter)
+    : payments;
+
+  const sorted = [...filtered];
+  sorted.sort((a, b) => {
+    switch (sort) {
+      case "paidAt_asc":
+        return new Date(a.paidAt).getTime() - new Date(b.paidAt).getTime();
+      case "amount_desc":
+        return Number(b.amount) - Number(a.amount);
+      case "amount_asc":
+        return Number(a.amount) - Number(b.amount);
+      case "paidAt_desc":
+      default:
+        return new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime();
+    }
+  });
+  return sorted;
+}, [payments, sort, feeTypeFilter]);
 
   function resetFilters() {
     setSearch("");
